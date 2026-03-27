@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "./pages/Dashboard";
 import RateIntelligence from "./pages/RateIntelligence";
+import AISourcing from "./pages/AISourcing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/rate-intelligence" element={<RateIntelligence />} />
+          <Route path="/ai-sourcing" element={<AISourcing />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
