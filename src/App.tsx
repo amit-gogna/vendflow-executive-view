@@ -25,6 +25,7 @@ const App = () => (
           <Route path="/ai-sourcing" element={<AISourcing />} />
           <Route path="/proposals" element={<Proposals />} />
           <Route path="/vendors" element={<Vendors />} />
+          <Route path="/governance" element={<Governance />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
