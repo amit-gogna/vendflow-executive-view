@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import RateIntelligence from "./pages/RateIntelligence";
 import AISourcing from "./pages/AISourcing";
 import Proposals from "./pages/Proposals";
+import Vendors from "./pages/Vendors";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
