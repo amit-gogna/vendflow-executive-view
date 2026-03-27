@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "./pages/Dashboard";
 import RateIntelligence from "./pages/RateIntelligence";
 import AISourcing from "./pages/AISourcing";
+import Proposals from "./pages/Proposals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
