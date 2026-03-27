@@ -8,6 +8,7 @@ import RateIntelligence from "./pages/RateIntelligence";
 import AISourcing from "./pages/AISourcing";
 import Proposals from "./pages/Proposals";
 import Vendors from "./pages/Vendors";
+import Governance from "./pages/Governance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/ai-sourcing" element={<AISourcing />} />
           <Route path="/proposals" element={<Proposals />} />
           <Route path="/vendors" element={<Vendors />} />
+          <Route path="/governance" element={<Governance />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
