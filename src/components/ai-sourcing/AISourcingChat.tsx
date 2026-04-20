@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Brain, User, Pencil, ExternalLink } from "lucide-react";
+import { Send, Brain, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { RFQCard } from "./RFQCard";
@@ -40,24 +40,13 @@ const initialMessages: Message[] = [
     content:
       "Hello! I'm your AI sourcing assistant. Describe the role you're looking for — I'll draft an RFQ, suggest rates, and recommend the best vendors from your network.\n\nTry something like: *\"I need a DevOps engineer in Stockholm for 6 months\"*",
   },
-  {
-    id: "2",
-    role: "user",
-    content: "I need a DevOps engineer in Stockholm for 6 months",
-  },
-  {
-    id: "3",
-    role: "assistant",
-    content:
-      "Great choice. Based on your vendor network and current market rates for **DevOps Engineers** in **Stockholm**, here's what I've put together:",
-    rfqData: demoRFQ,
-  },
 ];
 
 export function AISourcingChat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,23 +54,85 @@ export function AISourcingChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const streamText = (id: string, fullText: string, onDone: () => void) => {
+    const words = fullText.split(" ");
+    let i = 0;
+    setStreamingId(id);
+    const tick = () => {
+      i++;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, content: words.slice(0, i).join(" ") } : m))
+      );
+      if (i < words.length) {
+        setTimeout(tick, 35 + Math.random() * 40);
+      } else {
+        setStreamingId(null);
+        onDone();
+      }
+    };
+    tick();
+  };
+
+  const buildRFQResponse = (request: string): { reply: string; rfq?: RFQData } => {
+    const lower = request.toLowerCase();
+    const role = /devops|sre/.test(lower)
+      ? "DevOps Engineer"
+      : /react|frontend|front-end/.test(lower)
+      ? "Senior Frontend Engineer"
+      : /data|ml|ai/.test(lower)
+      ? "Data Engineer"
+      : /backend|node|python|java/.test(lower)
+      ? "Backend Engineer"
+      : "Software Engineer";
+    const location = /stockholm/.test(lower)
+      ? "Stockholm, SE"
+      : /berlin/.test(lower)
+      ? "Berlin, DE"
+      : /amsterdam/.test(lower)
+      ? "Amsterdam, NL"
+      : /helsinki/.test(lower)
+      ? "Helsinki, FI"
+      : "Stockholm, SE";
+    const monthsMatch = lower.match(/(\d+)\s*(month|months|mo)/);
+    const duration = monthsMatch ? `${monthsMatch[1]} months` : "6 months";
+
+    return {
+      reply: `Got it. Based on your request and current market rates for **${role}s** in **${location.split(",")[0]}**, here's a draft RFQ I've put together. Review and edit any field, then send to your shortlisted vendors.`,
+      rfq: {
+        role,
+        seniority: "Mid-Senior",
+        duration,
+        location,
+        rateRange: "$95–$120/hr",
+        vendors: [
+          { name: "CloudWorks GmbH", matchScore: 94, rate: "$105/hr" },
+          { name: "NordOps AB", matchScore: 89, rate: "$98/hr" },
+          { name: "TechCorp Nordic", matchScore: 82, rate: "$115/hr" },
+        ],
+      },
+    };
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() };
+    const userText = input.trim();
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
     setTimeout(() => {
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content:
-          "I've noted that requirement. Let me refine the sourcing criteria and check availability across your preferred vendors. I'll update the RFQ draft shortly.",
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
       setIsTyping(false);
-    }, 1800);
+      const { reply, rfq } = buildRFQResponse(userText);
+      const id = (Date.now() + 1).toString();
+      const assistantMsg: Message = { id, role: "assistant", content: "" };
+      setMessages((prev) => [...prev, assistantMsg]);
+      streamText(id, reply, () => {
+        if (rfq) {
+          setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, rfqData: rfq } : m)));
+        }
+      });
+    }, 700);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -1,28 +1,10 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, AlertCircle, Filter, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface RateRow {
-  role: string;
-  seniority: string;
-  geography: string;
-  vendorRate: number;
-  marketMedian: number;
-  variance: number;
-  vendor: string;
-  flagged: boolean;
-}
-
-const sampleData: RateRow[] = [
-  { role: "Backend Engineer", seniority: "Senior", geography: "Stockholm", vendorRate: 145, marketMedian: 118, variance: 22.9, vendor: "TechCorp Nordic", flagged: true },
-  { role: "DevOps Engineer", seniority: "Mid", geography: "Berlin", vendorRate: 112, marketMedian: 105, variance: 6.7, vendor: "CloudWorks GmbH", flagged: false },
-  { role: "Data Scientist", seniority: "Senior", geography: "London", vendorRate: 165, marketMedian: 140, variance: 17.9, vendor: "DataMinds UK", flagged: true },
-  { role: "Frontend Engineer", seniority: "Junior", geography: "Warsaw", vendorRate: 58, marketMedian: 62, variance: -6.5, vendor: "SoftHouse PL", flagged: false },
-  { role: "QA Engineer", seniority: "Mid", geography: "Lisbon", vendorRate: 72, marketMedian: 70, variance: 2.9, vendor: "QualityFirst PT", flagged: false },
-  { role: "Solutions Architect", seniority: "Senior", geography: "Amsterdam", vendorRate: 178, marketMedian: 148, variance: 20.3, vendor: "ArchTech NL", flagged: true },
-  { role: "Project Manager", seniority: "Senior", geography: "Copenhagen", vendorRate: 130, marketMedian: 125, variance: 4.0, vendor: "NordManage", flagged: false },
-  { role: "Security Engineer", seniority: "Mid", geography: "Helsinki", vendorRate: 125, marketMedian: 108, variance: 15.7, vendor: "SecureNorth", flagged: true },
-];
+import { useMockStore, type RateRow } from "@/lib/mock-store";
+import { useState } from "react";
+import { RateInsightDrawer } from "./RateInsightDrawer";
+import { toast } from "sonner";
 
 function VarianceBadge({ value, flagged }: { value: number; flagged: boolean }) {
   const isOver = value > 0;
@@ -50,7 +32,26 @@ function VarianceBadge({ value, flagged }: { value: number; flagged: boolean }) 
 }
 
 export function RateTable() {
+  const rates = useMockStore((s) => s.rates);
+  const [drawerRow, setDrawerRow] = useState<RateRow | null>(null);
+
+  const handleExport = () => {
+    const header = "role,seniority,geography,vendor,vendorRate,marketMedian,variance\n";
+    const body = rates
+      .map((r) => `${r.role},${r.seniority},${r.geography},${r.vendor},${r.vendorRate},${r.marketMedian},${r.variance}`)
+      .join("\n");
+    const blob = new Blob([header + body], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "vendflow-rates.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Exported rate analysis as CSV");
+  };
+
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -62,7 +63,7 @@ export function RateTable() {
         <div>
           <h2 className="font-heading text-sm font-semibold text-foreground">Rate Comparison</h2>
           <p className="text-[11px] text-muted-foreground">
-            {sampleData.length} roles · {sampleData.filter((r) => r.flagged).length} anomalies detected
+            {rates.length} roles · {rates.filter((r) => r.flagged).length} anomalies detected
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -70,7 +71,7 @@ export function RateTable() {
             <Filter className="h-3.5 w-3.5" />
             Filter
           </button>
-          <button className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <button onClick={handleExport} className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <Download className="h-3.5 w-3.5" />
             Export
           </button>
@@ -92,11 +93,17 @@ export function RateTable() {
             </tr>
           </thead>
           <tbody>
-            {sampleData.map((row, i) => (
-              <tr
-                key={i}
+            <AnimatePresence initial={false}>
+            {rates.map((row) => (
+              <motion.tr
+                key={row.id}
+                layout
+                initial={row.isNew ? { backgroundColor: "hsl(var(--primary) / 0.08)" } : undefined}
+                animate={{ backgroundColor: "rgba(0,0,0,0)" }}
+                transition={{ duration: 2 }}
+                onClick={() => setDrawerRow(row)}
                 className={cn(
-                  "border-b border-border/60 transition-colors hover:bg-surface-sunken/60",
+                  "cursor-pointer border-b border-border/60 transition-colors hover:bg-surface-sunken/60",
                   row.flagged && "bg-destructive/[0.02]"
                 )}
               >
@@ -114,11 +121,14 @@ export function RateTable() {
                 <td className="px-5 py-3 text-right">
                   <VarianceBadge value={row.variance} flagged={row.flagged} />
                 </td>
-              </tr>
+              </motion.tr>
             ))}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>
     </motion.div>
+    <RateInsightDrawer row={drawerRow} onClose={() => setDrawerRow(null)} />
+    </>
   );
 }
