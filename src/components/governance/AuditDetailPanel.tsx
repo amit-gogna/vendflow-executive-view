@@ -2,20 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Database, FileText, GitBranch, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMockStore } from "@/lib/mock-store";
+import { toast } from "sonner";
 
-interface AuditDetail {
-  title: string;
-  type: string;
-  timestamp: string;
-  actor: string;
-  inputData: { label: string; value: string }[];
-  aiReasoning: string;
-  decision: string;
-  decisionStatus: "approved" | "pending" | "rejected";
-  references: string[];
-}
-
-const detailMap: Record<string, AuditDetail> = {
+const seedDetailMap: Record<string, any> = {
   "1": {
     title: "AI Vendor Recommendation",
     type: "recommendation",
@@ -68,16 +58,16 @@ const detailMap: Record<string, AuditDetail> = {
   },
 };
 
-const fallback: AuditDetail = {
+const fallback = {
   title: "Event Detail",
   type: "general",
   timestamp: "—",
   actor: "—",
-  inputData: [{ label: "Info", value: "Select an event from the timeline to see full audit details." }],
-  aiReasoning: "No AI reasoning data available for this event.",
+  inputData: [] as { label: string; value: string }[],
+  aiReasoning: "No additional AI reasoning recorded for this event.",
   decision: "—",
-  decisionStatus: "approved",
-  references: [],
+  decisionStatus: "approved" as const,
+  references: [] as string[],
 };
 
 interface Props {
@@ -85,6 +75,11 @@ interface Props {
 }
 
 export function AuditDetailPanel({ eventId }: Props) {
+  const event = useMockStore((s) =>
+    eventId ? s.auditLog.find((a) => a.id === eventId) : null
+  );
+  const { approveAudit, rejectAudit } = useMockStore();
+
   if (!eventId) {
     return (
       <Card className="border-border bg-card">
@@ -98,7 +93,35 @@ export function AuditDetailPanel({ eventId }: Props) {
     );
   }
 
-  const detail = detailMap[eventId] || fallback;
+  // Prefer live event from store; fall back to seed map (for original demo IDs); else fallback
+  const detail = event
+    ? {
+        title:
+          event.type === "recommendation"
+            ? "AI Vendor Recommendation"
+            : event.type === "flag"
+            ? "Anomaly Flag"
+            : event.type === "approval"
+            ? "Human Approval"
+            : event.type === "ingest"
+            ? "Document Ingest"
+            : event.type === "submission"
+            ? "Vendor Submission"
+            : event.type === "award"
+            ? "Contract Award"
+            : event.type === "dispatch"
+            ? "RFQ Dispatch"
+            : "Audit Event",
+        type: event.type,
+        timestamp: event.timestamp,
+        actor: event.actor,
+        inputData: event.inputData ?? fallback.inputData,
+        aiReasoning: event.aiReasoning ?? fallback.aiReasoning,
+        decision: event.decision ?? "—",
+        decisionStatus: event.decisionStatus ?? "approved",
+        references: event.references ?? [],
+      }
+    : seedDetailMap[eventId] || fallback;
 
   return (
     <Card className="border-border bg-card">
@@ -167,8 +190,27 @@ export function AuditDetailPanel({ eventId }: Props) {
 
         {detail.decisionStatus === "pending" && (
           <div className="flex gap-2 pt-1">
-            <Button size="sm" className="flex-1 text-xs">Approve</Button>
-            <Button size="sm" variant="outline" className="flex-1 text-xs">Reject</Button>
+            <Button
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={() => {
+                approveAudit(eventId);
+                toast.success("Decision approved & logged");
+              }}
+            >
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 text-xs"
+              onClick={() => {
+                rejectAudit(eventId);
+                toast("Decision rejected & logged");
+              }}
+            >
+              Reject
+            </Button>
           </div>
         )}
       </CardContent>
