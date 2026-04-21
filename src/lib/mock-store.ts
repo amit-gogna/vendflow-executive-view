@@ -143,6 +143,57 @@ const seedAudit: AuditEvent[] = [
 const seedRFQs: RFQ[] = [];
 const seedProposals: ProposalEntry[] = [];
 
+const seedCandidates: Candidate[] = [
+  {
+    id: "c1",
+    name: "Elin Bergström",
+    email: "elin@nordops.se",
+    title: "Senior DevOps Engineer",
+    seniority: "Senior",
+    location: "Stockholm",
+    skills: ["Kubernetes", "Terraform", "AWS", "GitOps", "Prometheus"],
+    vendor: "NordOps AB",
+    avatarInitials: "EB",
+    rate: 135,
+    availability: "available",
+  },
+  {
+    id: "c2",
+    name: "Marcus Lindqvist",
+    email: "marcus@techflow.no",
+    title: "Backend Engineer",
+    seniority: "Senior",
+    location: "Oslo",
+    skills: ["Go", "PostgreSQL", "gRPC", "Kafka"],
+    vendor: "TechFlow Nordic",
+    avatarInitials: "ML",
+    rate: 128,
+    availability: "interviewing",
+  },
+  {
+    id: "c3",
+    name: "Sofia Hansen",
+    email: "sofia@codecraft.dk",
+    title: "Full-Stack Engineer",
+    seniority: "Mid",
+    location: "Copenhagen",
+    skills: ["TypeScript", "React", "Node.js", "Postgres"],
+    vendor: "CodeCraft Solutions",
+    avatarInitials: "SH",
+    rate: 95,
+    availability: "available",
+  },
+];
+
+const seedOpportunities: CandidateOpportunity[] = [
+  { id: "o1", candidateId: "c1", rfqTitle: "RFQ-2026-047 · Senior DevOps", client: "Acme Corp", role: "DevOps Engineer", rateRange: "$120–150/h", status: "submitted", submittedAt: "2026-04-18 14:22", matchScore: 94 },
+  { id: "o2", candidateId: "c1", rfqTitle: "RFQ-2026-051 · Platform SRE", client: "Globex Industries", role: "SRE", rateRange: "$130–160/h", status: "matched", matchScore: 88 },
+  { id: "o3", candidateId: "c1", rfqTitle: "RFQ-2026-039 · Cloud Architect", client: "Initech", role: "Cloud Architect", rateRange: "$150–180/h", status: "interviewing", submittedAt: "2026-04-12 09:10", matchScore: 82 },
+  { id: "o4", candidateId: "c1", rfqTitle: "RFQ-2026-022 · DevOps Lead", client: "Acme Corp", role: "DevOps Lead", rateRange: "$140–170/h", status: "awarded", submittedAt: "2026-03-28 11:45", matchScore: 96 },
+  { id: "o5", candidateId: "c2", rfqTitle: "RFQ-2026-045 · Senior Backend", client: "Acme Corp", role: "Backend Engineer", rateRange: "$110–140/h", status: "submitted", submittedAt: "2026-04-19 16:00", matchScore: 91 },
+  { id: "o6", candidateId: "c3", rfqTitle: "RFQ-2026-049 · Full-Stack", client: "Hooli", role: "Full-Stack", rateRange: "$85–110/h", status: "matched", matchScore: 89 },
+];
+
 let counter = 1000;
 const nextId = () => `id-${++counter}`;
 
@@ -151,6 +202,9 @@ export const useMockStore = create<MockStore>((set) => ({
   rfqs: seedRFQs,
   proposals: seedProposals,
   auditLog: seedAudit,
+  candidates: seedCandidates,
+  opportunities: seedOpportunities,
+  candidateSession: null,
 
   addRates: (rows) =>
     set((s) => ({
@@ -196,6 +250,32 @@ export const useMockStore = create<MockStore>((set) => ({
       auditLog: s.auditLog.map((a) => (a.id === id ? { ...a, isNew: false } : a)),
       rates: s.rates.map((r) => (r.id === id ? { ...r, isNew: false } : r)),
       proposals: s.proposals.map((p) => (p.id === id ? { ...p, isNew: false } : p)),
+    })),
+
+  loginCandidate: (email) => {
+    let matched: Candidate | null = null;
+    set((s) => {
+      const found = s.candidates.find((c) => c.email.toLowerCase() === email.toLowerCase()) ?? s.candidates[0];
+      matched = found;
+      return { candidateSession: { candidateId: found.id, loggedInAt: now() } };
+    });
+    return matched;
+  },
+
+  logoutCandidate: () => set({ candidateSession: null }),
+
+  acceptOpportunity: (id) =>
+    set((s) => ({
+      opportunities: s.opportunities.map((o) =>
+        o.id === id ? { ...o, status: "submitted", submittedAt: now() } : o
+      ),
+    })),
+
+  declineOpportunity: (id) =>
+    set((s) => ({
+      opportunities: s.opportunities.map((o) =>
+        o.id === id ? { ...o, status: "rejected" } : o
+      ),
     })),
 }));
 
