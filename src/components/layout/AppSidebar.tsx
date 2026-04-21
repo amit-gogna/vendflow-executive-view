@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   ChevronLeft,
   Zap,
+  UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMockStore } from "@/lib/mock-store";
@@ -31,6 +32,7 @@ const navSections = [
     items: [
       { title: "Proposals", path: "/proposals", icon: FileText },
       { title: "Vendors", path: "/vendors", icon: Building2 },
+      { title: "Candidate Portal", path: "/candidate-login", icon: UserCircle2 },
     ],
   },
   {
