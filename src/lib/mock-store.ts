@@ -58,11 +58,45 @@ export interface ProposalEntry {
   isNew?: boolean;
 }
 
+export interface Candidate {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  seniority: string;
+  location: string;
+  skills: string[];
+  vendor: string;
+  avatarInitials: string;
+  rate: number;
+  availability: "available" | "engaged" | "interviewing";
+}
+
+export interface CandidateOpportunity {
+  id: string;
+  candidateId: string;
+  rfqTitle: string;
+  client: string;
+  role: string;
+  rateRange: string;
+  status: "matched" | "submitted" | "interviewing" | "awarded" | "rejected";
+  submittedAt?: string;
+  matchScore: number;
+}
+
+export interface CandidateSession {
+  candidateId: string;
+  loggedInAt: string;
+}
+
 interface MockStore {
   rates: RateRow[];
   rfqs: RFQ[];
   proposals: ProposalEntry[];
   auditLog: AuditEvent[];
+  candidates: Candidate[];
+  opportunities: CandidateOpportunity[];
+  candidateSession: CandidateSession | null;
 
   addRates: (rows: RateRow[]) => void;
   addRFQ: (rfq: RFQ) => void;
@@ -72,6 +106,10 @@ interface MockStore {
   approveAudit: (id: string) => void;
   rejectAudit: (id: string) => void;
   clearNewFlag: (id: string) => void;
+  loginCandidate: (email: string) => Candidate | null;
+  logoutCandidate: () => void;
+  acceptOpportunity: (id: string) => void;
+  declineOpportunity: (id: string) => void;
 }
 
 const now = () => {
