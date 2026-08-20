@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Brain, User } from "lucide-react";
+import { Send, Brain, User, Clock, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { RFQCard } from "./RFQCard";
@@ -11,16 +11,22 @@ interface Message {
   rfqData?: RFQData;
 }
 
+export type EngagementModel = "time" | "outcome";
+
 export interface RFQData {
+  engagementModel: EngagementModel;
   role: string;
   seniority: string;
   duration: string;
   location: string;
   rateRange: string;
-  vendors: { name: string; matchScore: number; rate: string }[];
+  deliverables?: string[];
+  milestones?: { name: string; due: string; value: string }[];
+  vendors: { name: string; matchScore: number; rate: string; deliveryNote?: string }[];
 }
 
 const demoRFQ: RFQData = {
+  engagementModel: "time",
   role: "DevOps Engineer",
   seniority: "Mid-Senior",
   duration: "6 months",
@@ -33,20 +39,99 @@ const demoRFQ: RFQData = {
   ],
 };
 
+const demoOutcomeRFQ: RFQData = {
+  engagementModel: "outcome",
+  role: "Cloud migration of legacy billing platform",
+  seniority: "High complexity",
+  duration: "14 weeks",
+  location: "Remote + Stockholm workshops",
+  rateRange: "$180k–$240k fixed",
+  deliverables: [
+    "Migration assessment & target AWS architecture, signed off by your architects",
+    "Zero-downtime cutover of billing services with rollback plan",
+    "IaC repository with automated CI/CD pipelines handed over",
+    "Runbooks, monitoring dashboards and 4 weeks of hypercare",
+  ],
+  milestones: [
+    { name: "Discovery & architecture", due: "Week 3", value: "20%" },
+    { name: "Pilot workload migrated", due: "Week 7", value: "30%" },
+    { name: "Full cutover complete", due: "Week 12", value: "35%" },
+    { name: "Hypercare & handover accepted", due: "Week 14", value: "15%" },
+  ],
+  vendors: [
+    {
+      name: "CloudWorks GmbH",
+      matchScore: 93,
+      rate: "$205k fixed",
+      deliveryNote: "8 similar migrations · outcome-priced",
+    },
+    {
+      name: "NordOps AB",
+      matchScore: 88,
+      rate: "$189k fixed",
+      deliveryNote: "Milestone-based, 4 wk hypercare included",
+    },
+    {
+      name: "TechCorp Nordic",
+      matchScore: 80,
+      rate: "$236k fixed",
+      deliveryNote: "Capped T&M fallback offered",
+    },
+  ],
+};
+
 const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
     content:
-      "Hello! I'm your AI sourcing assistant. Describe the role you're looking for — I'll draft an RFQ, suggest rates, and recommend the best vendors from your network.\n\nTry something like: *\"I need a DevOps engineer in Stockholm for 6 months\"*",
+      "Hello! I'm your AI sourcing assistant. Describe what you need — a role to staff, or a business outcome to deliver. I'll draft the right request, suggest pricing, and recommend vendors.\n\nTry: *\"I need a DevOps engineer in Stockholm for 6 months\"* or *\"Migrate our legacy billing platform to AWS, fixed price\"*",
+  },
+  {
+    id: "2",
+    role: "user",
+    content: "I need a DevOps engineer in Stockholm for 6 months",
+  },
+  {
+    id: "3",
+    role: "assistant",
+    content:
+      "Great choice. Based on your vendor network and current market rates for **DevOps Engineers** in **Stockholm**, here's what I've put together:",
+    rfqData: demoRFQ,
   },
 ];
+
+
+const OUTCOME_HINTS = [
+  "outcome",
+  "fixed price",
+  "fixed-price",
+  "deliverable",
+  "milestone",
+  "project",
+  "migrate",
+  "migration",
+  "implement",
+  "build ",
+  "sow",
+  "statement of work",
+  "turnkey",
+  "managed service",
+];
+
+function detectModel(text: string): EngagementModel | null {
+  const t = text.toLowerCase();
+  if (OUTCOME_HINTS.some((h) => t.includes(h))) return "outcome";
+  if (/(engineer|developer|consultant|contractor|per hour|\/hr|hourly|resource)/.test(t))
+    return "time";
+  return null;
+}
 
 export function AISourcingChat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [model, setModel] = useState<EngagementModel>("time");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -54,86 +139,38 @@ export function AISourcingChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const streamText = (id: string, fullText: string, onDone: () => void) => {
-    const words = fullText.split(" ");
-    let i = 0;
-    setStreamingId(id);
-    const tick = () => {
-      i++;
-      setMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, content: words.slice(0, i).join(" ") } : m))
-      );
-      if (i < words.length) {
-        setTimeout(tick, 35 + Math.random() * 40);
-      } else {
-        setStreamingId(null);
-        onDone();
-      }
-    };
-    tick();
-  };
-
-  const buildRFQResponse = (request: string): { reply: string; rfq?: RFQData } => {
-    const lower = request.toLowerCase();
-    const role = /devops|sre/.test(lower)
-      ? "DevOps Engineer"
-      : /react|frontend|front-end/.test(lower)
-      ? "Senior Frontend Engineer"
-      : /data|ml|ai/.test(lower)
-      ? "Data Engineer"
-      : /backend|node|python|java/.test(lower)
-      ? "Backend Engineer"
-      : "Software Engineer";
-    const location = /stockholm/.test(lower)
-      ? "Stockholm, SE"
-      : /berlin/.test(lower)
-      ? "Berlin, DE"
-      : /amsterdam/.test(lower)
-      ? "Amsterdam, NL"
-      : /helsinki/.test(lower)
-      ? "Helsinki, FI"
-      : "Stockholm, SE";
-    const monthsMatch = lower.match(/(\d+)\s*(month|months|mo)/);
-    const duration = monthsMatch ? `${monthsMatch[1]} months` : "6 months";
-
-    return {
-      reply: `Got it. Based on your request and current market rates for **${role}s** in **${location.split(",")[0]}**, here's a draft RFQ I've put together. Review and edit any field, then send to your shortlisted vendors.`,
-      rfq: {
-        role,
-        seniority: "Mid-Senior",
-        duration,
-        location,
-        rateRange: "$95–$120/hr",
-        vendors: [
-          { name: "CloudWorks GmbH", matchScore: 94, rate: "$105/hr" },
-          { name: "NordOps AB", matchScore: 89, rate: "$98/hr" },
-          { name: "TechCorp Nordic", matchScore: 82, rate: "$115/hr" },
-        ],
-      },
-    };
-  };
-
   const handleSend = () => {
     if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() };
-    const userText = input.trim();
+    const text = input.trim();
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
+    const detected = detectModel(text) ?? model;
+    if (detected !== model) setModel(detected);
+
     setTimeout(() => {
-      setIsTyping(false);
-      const { reply, rfq } = buildRFQResponse(userText);
-      const id = (Date.now() + 1).toString();
-      const assistantMsg: Message = { id, role: "assistant", content: "" };
+      const assistantMsg: Message =
+        detected === "outcome"
+          ? {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content:
+                "This looks like **outcome-based work**, so I've drafted a *Statement of Work* instead of a role-based RFQ — with deliverables, acceptance criteria and a milestone payment plan. Vendors will bid a **fixed price** against the outcome rather than an hourly rate:",
+              rfqData: demoOutcomeRFQ,
+            }
+          : {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content:
+                "I've noted that requirement. Let me refine the sourcing criteria and check availability across your preferred vendors. I'll update the RFQ draft shortly.",
+            };
       setMessages((prev) => [...prev, assistantMsg]);
-      streamText(id, reply, () => {
-        if (rfq) {
-          setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, rfqData: rfq } : m)));
-        }
-      });
-    }, 700);
+      setIsTyping(false);
+    }, 1800);
   };
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -216,6 +253,31 @@ export function AISourcingChat() {
 
       {/* Input */}
       <div className="border-t border-border px-4 py-3">
+        <div className="mx-auto mb-2.5 flex max-w-2xl items-center gap-2">
+          <span className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
+            Engagement
+          </span>
+          <div className="flex rounded-lg bg-surface-sunken p-0.5">
+            {([
+              { key: "time" as EngagementModel, label: "Time & materials", icon: Clock },
+              { key: "outcome" as EngagementModel, label: "Outcome-based", icon: Target },
+            ]).map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setModel(opt.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-medium transition-colors",
+                  model === opt.key
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <opt.icon className="h-3 w-3" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mx-auto flex max-w-2xl items-center gap-2">
           <div className="relative flex-1">
             <input
@@ -223,10 +285,15 @@ export function AISourcingChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe your need… e.g. 'Senior React developer in Berlin, 3 months'"
+              placeholder={
+                model === "outcome"
+                  ? "Describe the outcome… e.g. 'Migrate our billing platform to AWS, fixed price, 14 weeks'"
+                  : "Describe your need… e.g. 'Senior React developer in Berlin, 3 months'"
+              }
               className="h-10 w-full rounded-lg border border-input bg-surface-sunken pl-4 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
             />
           </div>
+
           <button
             onClick={handleSend}
             disabled={!input.trim()}

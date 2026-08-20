@@ -8,14 +8,8 @@ import {
   MapPin,
   Briefcase,
   Clock,
-  Gavel,
-  Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMockStore } from "@/lib/mock-store";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "sonner";
 
 interface Proposal {
   vendor: string;
@@ -39,7 +33,7 @@ interface Candidate {
   availability: string;
 }
 
-const seedProposals: Proposal[] = [
+const proposals: Proposal[] = [
   {
     vendor: "NordOps AB",
     initials: "NO",
@@ -149,54 +143,8 @@ function ExpandedRow({ candidates }: { candidates: Candidate[] }) {
 
 export function ProposalTable() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const [awardTarget, setAwardTarget] = useState<Proposal | null>(null);
-  const [awarded, setAwarded] = useState<string | null>(null);
-  const livProposals = useMockStore((s) => s.proposals);
-  const logAction = useMockStore((s) => s.logAction);
-
-  // Merge live proposals from sourcing into the table
-  const liveAsRows: Proposal[] = livProposals.slice(0, 3).map((p, i) => ({
-    vendor: p.vendor,
-    initials: p.initials,
-    rate: p.rate,
-    rateNum: p.rateNum,
-    marketFit: 80 + Math.floor(Math.random() * 15),
-    skillMatch: 78 + Math.floor(Math.random() * 18),
-    reliability: 75 + Math.floor(Math.random() * 20),
-    overallRank: seedProposals.length + i + 1,
-    recommended: false,
-    flags: p.rateNum > 120 ? [`+${Math.round(((p.rateNum - 107) / 107) * 100)}% above market`] : [],
-    candidates: [{ name: p.candidate, role: "Engineer", experience: "—", location: "—", availability: "Submitted via portal" }],
-  }));
-
-  const proposals = [...seedProposals, ...liveAsRows];
-
-  const confirmAward = () => {
-    if (!awardTarget) return;
-    setAwarded(awardTarget.vendor);
-    logAction({
-      type: "award",
-      actor: "Anna Karlsson",
-      actorType: "human",
-      summary: `Contract awarded to ${awardTarget.vendor} at ${awardTarget.rate}`,
-      vendor: awardTarget.vendor,
-      inputData: [
-        { label: "Vendor", value: awardTarget.vendor },
-        { label: "Rate", value: awardTarget.rate },
-        { label: "Market Fit", value: `${awardTarget.marketFit}/100` },
-        { label: "Skill Match", value: `${awardTarget.skillMatch}/100` },
-        { label: "Reliability", value: `${awardTarget.reliability}/100` },
-      ],
-      aiReasoning: `Decision-gate triggered: human approval required to award contract. AI ranked ${awardTarget.vendor} #${awardTarget.overallRank} based on weighted scoring (40% rate fit, 35% skill match, 25% reliability).`,
-      decision: `Awarded — ${awardTarget.vendor}`,
-      decisionStatus: "approved",
-    });
-    toast.success(`Contract awarded to ${awardTarget.vendor}`);
-    setAwardTarget(null);
-  };
 
   return (
-    <>
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -233,8 +181,7 @@ export function ProposalTable() {
                     className={cn(
                       "cursor-pointer border-b border-border/60 transition-colors hover:bg-surface-sunken/60",
                       p.recommended && "bg-success/[0.03]",
-                      p.flags.length > 0 && "bg-destructive/[0.02]",
-                      awarded === p.vendor && "bg-success/[0.06]"
+                      p.flags.length > 0 && "bg-destructive/[0.02]"
                     )}
                   >
                     <td className="px-5 py-3">
@@ -249,11 +196,6 @@ export function ProposalTable() {
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-foreground">{p.vendor}</span>
                             {p.recommended && <Trophy className="h-3.5 w-3.5 text-success" />}
-                            {awarded === p.vendor && (
-                              <span className="flex items-center gap-1 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-bold text-success">
-                                <CheckCircle2 className="h-2.5 w-2.5" /> Awarded
-                              </span>
-                            )}
                           </div>
                           {p.flags.length > 0 && (
                             <div className="mt-0.5 flex flex-wrap gap-1">
@@ -280,22 +222,10 @@ export function ProposalTable() {
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setAwardTarget(p); }}
-                          disabled={!!awarded}
-                          className={cn(
-                            "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
-                            awarded ? "bg-secondary text-muted-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"
-                          )}
-                        >
-                          <Gavel className="h-3 w-3" /> Award
-                        </button>
-                        <ChevronDown className={cn(
-                          "h-4 w-4 text-muted-foreground transition-transform",
-                          expandedIdx === i && "rotate-180"
-                        )} />
-                      </div>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 text-muted-foreground transition-transform",
+                        expandedIdx === i && "rotate-180"
+                      )} />
                     </td>
                   </tr>
                   {expandedIdx === i && (
@@ -308,63 +238,5 @@ export function ProposalTable() {
         </table>
       </div>
     </motion.div>
-
-    <Dialog open={!!awardTarget} onOpenChange={(o) => !o && setAwardTarget(null)}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Gavel className="h-5 w-5 text-primary" />
-            Decision Gate — Award Contract
-          </DialogTitle>
-        </DialogHeader>
-        {awardTarget && (
-          <div className="space-y-4 pt-2">
-            <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-[12px] text-foreground">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
-              <span>
-                This action requires <strong>human approval</strong> per EU AI Act guardrails. The decision will
-                be permanently logged in the audit trail.
-              </span>
-            </div>
-            <div className="rounded-lg border border-border bg-surface-sunken/50 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                You're about to award
-              </p>
-              <p className="mt-1 text-base font-semibold text-foreground">{awardTarget.vendor}</p>
-              <p className="text-[12px] text-muted-foreground">at {awardTarget.rate}</p>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <Mini label="Market Fit" value={awardTarget.marketFit} />
-                <Mini label="Skill" value={awardTarget.skillMatch} />
-                <Mini label="Reliability" value={awardTarget.reliability} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setAwardTarget(null)}
-                className="rounded-md border border-border bg-card px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmAward}
-                className="rounded-md bg-primary px-4 py-2 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Confirm & Log
-              </button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-    </>
-  );
-}
-
-function Mini({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded bg-card p-2">
-      <p className="font-mono text-sm font-bold text-foreground">{value}</p>
-      <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
-    </div>
   );
 }

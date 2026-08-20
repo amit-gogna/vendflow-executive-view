@@ -1,15 +1,20 @@
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, ChevronDown, Shield, AlertTriangle, CheckCircle2, Clock, Filter, X, Download } from "lucide-react";
+import { Search, Bell, ChevronDown, Shield, AlertTriangle, CheckCircle2, Clock, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GovernanceTimeline } from "@/components/governance/GovernanceTimeline";
 import { AuditDetailPanel } from "@/components/governance/AuditDetailPanel";
-import { useMockStore } from "@/lib/mock-store";
-import { toast } from "sonner";
+
+const kpis = [
+  { label: "AI Actions (30d)", value: "247", icon: Shield, accent: "text-primary" },
+  { label: "Pending Approvals", value: "5", icon: AlertTriangle, accent: "text-amber-500" },
+  { label: "Approved", value: "231", icon: CheckCircle2, accent: "text-emerald-500" },
+  { label: "Avg Review Time", value: "1.4h", icon: Clock, accent: "text-muted-foreground" },
+];
 
 export default function Governance() {
   const [collapsed, setCollapsed] = useState(false);
@@ -17,38 +22,8 @@ export default function Governance() {
   const [filterUser, setFilterUser] = useState("all");
   const [filterAction, setFilterAction] = useState("all");
   const [filterVendor, setFilterVendor] = useState("all");
-  const [search, setSearch] = useState("");
-  const auditLog = useMockStore((s) => s.auditLog);
 
-  const pending = auditLog.filter((a) => a.decisionStatus === "pending").length;
-  const approved = auditLog.filter((a) => a.decisionStatus === "approved").length;
-
-  const kpis = [
-    { label: "AI Actions (30d)", value: String(auditLog.length + 200), icon: Shield, accent: "text-primary" },
-    { label: "Pending Approvals", value: String(pending), icon: AlertTriangle, accent: "text-amber-500" },
-    { label: "Approved", value: String(approved + 220), icon: CheckCircle2, accent: "text-emerald-500" },
-    { label: "Avg Review Time", value: "1.4h", icon: Clock, accent: "text-muted-foreground" },
-  ];
-
-  const hasFilters = filterUser !== "all" || filterAction !== "all" || filterVendor !== "all" || !!search;
-
-  const handleExport = () => {
-    const payload = {
-      exported_at: new Date().toISOString(),
-      org: "Acme Corp",
-      compliance_framework: "EU AI Act",
-      total_events: auditLog.length,
-      events: auditLog,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vendflow-audit-trail-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Audit trail exported", { description: `${auditLog.length} events · JSON format` });
-  };
+  const hasFilters = filterUser !== "all" || filterAction !== "all" || filterVendor !== "all";
 
   return (
     <div className="flex h-screen bg-background">
@@ -63,16 +38,8 @@ export default function Governance() {
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-64 items-center gap-2 rounded-md border border-input bg-background px-3">
               <Search className="h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search audit logs..."
-                className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-              />
+              <input placeholder="Search audit logs..." className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
             </div>
-            <Button size="sm" variant="outline" onClick={handleExport} className="h-9 gap-1.5 text-xs">
-              <Download className="h-3.5 w-3.5" /> Export
-            </Button>
             <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent"><Bell className="h-4 w-4" /></button>
             <div className="flex items-center gap-2 rounded-md border border-input px-3 py-1.5">
               <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">AK</div>
@@ -132,7 +99,7 @@ export default function Governance() {
               </SelectContent>
             </Select>
             {hasFilters && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={() => { setFilterUser("all"); setFilterAction("all"); setFilterVendor("all"); setSearch(""); }}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={() => { setFilterUser("all"); setFilterAction("all"); setFilterVendor("all"); }}>
                 <X className="mr-1 h-3 w-3" /> Clear
               </Button>
             )}
@@ -146,14 +113,7 @@ export default function Governance() {
                   <CardTitle className="text-sm font-semibold text-foreground">Activity Log</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <GovernanceTimeline
-                    selectedId={selectedEvent}
-                    onSelect={setSelectedEvent}
-                    filterUser={filterUser}
-                    filterAction={filterAction}
-                    filterVendor={filterVendor}
-                    search={search}
-                  />
+                  <GovernanceTimeline selectedId={selectedEvent} onSelect={setSelectedEvent} />
                 </CardContent>
               </Card>
             </div>

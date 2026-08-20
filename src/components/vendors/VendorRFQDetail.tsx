@@ -14,8 +14,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMockStore } from "@/lib/mock-store";
-import { toast } from "sonner";
 
 interface Candidate {
   name: string;
@@ -82,46 +80,6 @@ interface Props {
 export function VendorRFQDetail({ rfqId }: Props) {
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const { addProposal, logAction } = useMockStore();
-
-  const handleSubmit = () => {
-    if (!selectedCandidate) return;
-    const cand = suggestedCandidates.find((c) => c.name === selectedCandidate);
-    if (!cand) return;
-    const rateNum = parseInt(cand.suggestedRate.replace(/\D/g, ""));
-    addProposal({
-      id: `vendor-prop-${Date.now()}`,
-      rfqId,
-      vendor: "NordOps AB",
-      initials: "NO",
-      rate: cand.suggestedRate,
-      rateNum,
-      candidate: cand.name,
-      status: "submitted",
-      submittedAt: new Date().toISOString(),
-    });
-    logAction({
-      type: "submission",
-      actor: "NordOps AB",
-      actorType: "vendor",
-      summary: `Proposal submitted: ${cand.name} for ${rfqDetails.role} at ${cand.suggestedRate}`,
-      vendor: "NordOps AB",
-      inputData: [
-        { label: "RFQ", value: rfqId },
-        { label: "Candidate", value: cand.name },
-        { label: "Proposed Rate", value: cand.suggestedRate },
-        { label: "Skills", value: cand.skills.join(", ") },
-        { label: "Match Score", value: `${cand.matchScore}%` },
-      ],
-      aiReasoning: `One-click vendor proposal. Candidate ${cand.name} pre-matched by AI based on skill overlap and rate-card alignment. Submission auto-validated against RFQ requirements.`,
-      decision: "Submission accepted",
-      decisionStatus: "approved",
-    });
-    toast.success("Proposal submitted!", {
-      description: `${cand.name} forwarded to the buyer for evaluation.`,
-    });
-    setSubmitted(true);
-  };
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -315,7 +273,7 @@ export function VendorRFQDetail({ rfqId }: Props) {
               </div>
             ) : (
               <button
-                onClick={handleSubmit}
+                onClick={() => selectedCandidate && setSubmitted(true)}
                 disabled={!selectedCandidate}
                 className={cn(
                   "flex w-full items-center justify-center gap-2 rounded-lg py-3 text-[13px] font-semibold transition-colors",

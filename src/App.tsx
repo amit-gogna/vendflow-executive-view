@@ -9,8 +9,6 @@ import AISourcing from "./pages/AISourcing";
 import Proposals from "./pages/Proposals";
 import Vendors from "./pages/Vendors";
 import Governance from "./pages/Governance";
-import CandidateLogin from "./pages/CandidateLogin";
-import CandidatePortal from "./pages/CandidatePortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,8 +26,6 @@ const App = () => (
           <Route path="/proposals" element={<Proposals />} />
           <Route path="/vendors" element={<Vendors />} />
           <Route path="/governance" element={<Governance />} />
-          <Route path="/candidate-login" element={<CandidateLogin />} />
-          <Route path="/candidates" element={<CandidatePortal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
