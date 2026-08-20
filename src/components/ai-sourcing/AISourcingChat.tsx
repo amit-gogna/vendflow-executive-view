@@ -253,6 +253,31 @@ export function AISourcingChat() {
 
       {/* Input */}
       <div className="border-t border-border px-4 py-3">
+        <div className="mx-auto mb-2.5 flex max-w-2xl items-center gap-2">
+          <span className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
+            Engagement
+          </span>
+          <div className="flex rounded-lg bg-surface-sunken p-0.5">
+            {([
+              { key: "time" as EngagementModel, label: "Time & materials", icon: Clock },
+              { key: "outcome" as EngagementModel, label: "Outcome-based", icon: Target },
+            ]).map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setModel(opt.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-medium transition-colors",
+                  model === opt.key
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <opt.icon className="h-3 w-3" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mx-auto flex max-w-2xl items-center gap-2">
           <div className="relative flex-1">
             <input
@@ -260,10 +285,15 @@ export function AISourcingChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe your need… e.g. 'Senior React developer in Berlin, 3 months'"
+              placeholder={
+                model === "outcome"
+                  ? "Describe the outcome… e.g. 'Migrate our billing platform to AWS, fixed price, 14 weeks'"
+                  : "Describe your need… e.g. 'Senior React developer in Berlin, 3 months'"
+              }
               className="h-10 w-full rounded-lg border border-input bg-surface-sunken pl-4 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
             />
           </div>
+
           <button
             onClick={handleSend}
             disabled={!input.trim()}
