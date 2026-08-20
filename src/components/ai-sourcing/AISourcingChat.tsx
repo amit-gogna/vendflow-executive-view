@@ -102,10 +102,36 @@ const initialMessages: Message[] = [
 ];
 
 
+const OUTCOME_HINTS = [
+  "outcome",
+  "fixed price",
+  "fixed-price",
+  "deliverable",
+  "milestone",
+  "project",
+  "migrate",
+  "migration",
+  "implement",
+  "build ",
+  "sow",
+  "statement of work",
+  "turnkey",
+  "managed service",
+];
+
+function detectModel(text: string): EngagementModel | null {
+  const t = text.toLowerCase();
+  if (OUTCOME_HINTS.some((h) => t.includes(h))) return "outcome";
+  if (/(engineer|developer|consultant|contractor|per hour|\/hr|hourly|resource)/.test(t))
+    return "time";
+  return null;
+}
+
 export function AISourcingChat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [model, setModel] = useState<EngagementModel>("time");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -115,22 +141,36 @@ export function AISourcingChat() {
 
   const handleSend = () => {
     if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() };
+    const text = input.trim();
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
+    const detected = detectModel(text) ?? model;
+    if (detected !== model) setModel(detected);
+
     setTimeout(() => {
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content:
-          "I've noted that requirement. Let me refine the sourcing criteria and check availability across your preferred vendors. I'll update the RFQ draft shortly.",
-      };
+      const assistantMsg: Message =
+        detected === "outcome"
+          ? {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content:
+                "This looks like **outcome-based work**, so I've drafted a *Statement of Work* instead of a role-based RFQ — with deliverables, acceptance criteria and a milestone payment plan. Vendors will bid a **fixed price** against the outcome rather than an hourly rate:",
+              rfqData: demoOutcomeRFQ,
+            }
+          : {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content:
+                "I've noted that requirement. Let me refine the sourcing criteria and check availability across your preferred vendors. I'll update the RFQ draft shortly.",
+            };
       setMessages((prev) => [...prev, assistantMsg]);
       setIsTyping(false);
     }, 1800);
   };
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
