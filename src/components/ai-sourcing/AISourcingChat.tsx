@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Brain, User, Pencil, ExternalLink } from "lucide-react";
+import { Send, Brain, User, Clock, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { RFQCard } from "./RFQCard";
@@ -11,16 +11,22 @@ interface Message {
   rfqData?: RFQData;
 }
 
+export type EngagementModel = "time" | "outcome";
+
 export interface RFQData {
+  engagementModel: EngagementModel;
   role: string;
   seniority: string;
   duration: string;
   location: string;
   rateRange: string;
-  vendors: { name: string; matchScore: number; rate: string }[];
+  deliverables?: string[];
+  milestones?: { name: string; due: string; value: string }[];
+  vendors: { name: string; matchScore: number; rate: string; deliveryNote?: string }[];
 }
 
 const demoRFQ: RFQData = {
+  engagementModel: "time",
   role: "DevOps Engineer",
   seniority: "Mid-Senior",
   duration: "6 months",
@@ -33,12 +39,53 @@ const demoRFQ: RFQData = {
   ],
 };
 
+const demoOutcomeRFQ: RFQData = {
+  engagementModel: "outcome",
+  role: "Cloud migration of legacy billing platform",
+  seniority: "High complexity",
+  duration: "14 weeks",
+  location: "Remote + Stockholm workshops",
+  rateRange: "$180k–$240k fixed",
+  deliverables: [
+    "Migration assessment & target AWS architecture, signed off by your architects",
+    "Zero-downtime cutover of billing services with rollback plan",
+    "IaC repository with automated CI/CD pipelines handed over",
+    "Runbooks, monitoring dashboards and 4 weeks of hypercare",
+  ],
+  milestones: [
+    { name: "Discovery & architecture", due: "Week 3", value: "20%" },
+    { name: "Pilot workload migrated", due: "Week 7", value: "30%" },
+    { name: "Full cutover complete", due: "Week 12", value: "35%" },
+    { name: "Hypercare & handover accepted", due: "Week 14", value: "15%" },
+  ],
+  vendors: [
+    {
+      name: "CloudWorks GmbH",
+      matchScore: 93,
+      rate: "$205k fixed",
+      deliveryNote: "8 similar migrations · outcome-priced",
+    },
+    {
+      name: "NordOps AB",
+      matchScore: 88,
+      rate: "$189k fixed",
+      deliveryNote: "Milestone-based, 4 wk hypercare included",
+    },
+    {
+      name: "TechCorp Nordic",
+      matchScore: 80,
+      rate: "$236k fixed",
+      deliveryNote: "Capped T&M fallback offered",
+    },
+  ],
+};
+
 const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
     content:
-      "Hello! I'm your AI sourcing assistant. Describe the role you're looking for — I'll draft an RFQ, suggest rates, and recommend the best vendors from your network.\n\nTry something like: *\"I need a DevOps engineer in Stockholm for 6 months\"*",
+      "Hello! I'm your AI sourcing assistant. Describe what you need — a role to staff, or a business outcome to deliver. I'll draft the right request, suggest pricing, and recommend vendors.\n\nTry: *\"I need a DevOps engineer in Stockholm for 6 months\"* or *\"Migrate our legacy billing platform to AWS, fixed price\"*",
   },
   {
     id: "2",
@@ -53,6 +100,7 @@ const initialMessages: Message[] = [
     rfqData: demoRFQ,
   },
 ];
+
 
 export function AISourcingChat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
