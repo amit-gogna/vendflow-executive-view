@@ -1313,13 +1313,13 @@ export const suppliers: Supplier[] = [
   {
     id: "sup-nor",
     name: "Nordlys Consulting",
-    engagements: 1,
-    annualSpend: 1_240_000,
+    engagements: 2,
+    annualSpend: 1_412_800,
     deliveryScore: 76,
     commercialScore: 64,
     assuranceStatus: "Current",
     lastReview: "2026-04-11",
-    note: "Change requests priced on blended rates without role breakdown.",
+    note: "Change requests priced on blended rates; one individual engagement is past the 48-month rotation limit.",
   },
   {
     id: "sup-hel",
