@@ -110,7 +110,7 @@ export function Tag({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium leading-4",
+        "inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium leading-4",
         tones[tone],
       )}
     >
