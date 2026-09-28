@@ -748,6 +748,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-aur",
     type: "Deliverable project",
     criticality: "Standard",
+    useCase: "Closeout",
     owner: "Karin Sund",
     ownerRole: "Delivery Manager",
     costCentre: "IT-SEC-073",
