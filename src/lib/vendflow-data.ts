@@ -16,6 +16,45 @@ export type EngagementType =
 
 export type Criticality = "Business critical" | "Important" | "Standard";
 
+/**
+ * The five recurring, high-impact decisions this prototype is designed around,
+ * plus a closeout case for engagements already decided.
+ */
+export type UseCase =
+  | "Renewal cliff"
+  | "Scope change"
+  | "Rate drift"
+  | "Service failure"
+  | "Tenure risk"
+  | "Closeout";
+
+export const useCaseLabels: Record<UseCase, { short: string; explain: string }> = {
+  "Renewal cliff": {
+    short: "Renewal cliff",
+    explain: "A notice deadline is approaching and the contract renews itself if nothing is done.",
+  },
+  "Scope change": {
+    short: "Scope change",
+    explain: "A change request adds cost or time to agreed work.",
+  },
+  "Rate drift": {
+    short: "Rate drift",
+    explain: "What is billed no longer matches the agreed rate or seniority mix.",
+  },
+  "Service failure": {
+    short: "Service failure",
+    explain: "Service targets were missed often enough to open a remedy or exit right.",
+  },
+  "Tenure risk": {
+    short: "Tenure risk",
+    explain: "A long-running individual engagement carries employment and dependency risk.",
+  },
+  Closeout: {
+    short: "Closeout",
+    explain: "Decided already, with conditions still to verify.",
+  },
+};
+
 export type DecisionState =
   | "Needs review"
   | "In review"
@@ -70,6 +109,7 @@ export interface Engagement {
   supplierId: string;
   type: EngagementType;
   criticality: Criticality;
+  useCase: UseCase;
   owner: string;
   ownerRole: string;
   costCentre: string;
@@ -86,6 +126,13 @@ export interface Engagement {
   decisionState: DecisionState;
   situation: string;
   whyItMatters: string;
+  /** What is financially at stake in this specific decision. */
+  stakeAmount: number;
+  stakeLabel: string;
+  /** The single sentence that says what happens if nobody acts. */
+  ifNothingHappens: string;
+  /** Pre-drafted rationale the decision owner edits before recording. */
+  draftRationale: string;
   signalIds: string[];
   evidence: EvidenceItem[];
   options: OptionItem[];
@@ -163,6 +210,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-cyb",
     type: "Individual contractor",
     criticality: "Business critical",
+    useCase: "Renewal cliff",
     owner: "Johan Lindqvist",
     ownerRole: "IT Manager, Platform",
     costCentre: "IT-PLATFORM-204",
@@ -181,6 +229,12 @@ export const engagements: Engagement[] = [
       "Notice deadline falls in 94 days and the contract renews automatically for a further 12 months if no notice is given.",
     whyItMatters:
       "The engagement holds sole knowledge of the landing-zone design used by four migration workstreams, and its rate sits 16% above the current Nordic benchmark.",
+    stakeAmount: 41_400,
+    stakeLabel: "paid above market per year if it renews unchanged",
+    ifNothingHappens:
+      "The contract renews to 31 Mar 2028 at €165/h, with knowledge transfer and the expired security review still unaddressed.",
+    draftRationale:
+      "Continuing need for external platform architecture is confirmed to March 2028, but the contracted rate is 16% above the verified Nordic median. Counter at €148/h with a two-year term, documented handover of the landing-zone design as a deliverable, and a refreshed security review as a condition of signature. The June–July invoice variance of €4,455 is settled before the amendment is signed.",
     signalIds: ["rule-notice-90", "rule-rate-gap"],
     evidence: [
       {
@@ -381,6 +435,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-nor",
     type: "Consultancy team",
     criticality: "Business critical",
+    useCase: "Scope change",
     owner: "Sofia Almqvist",
     ownerRole: "Programme Director",
     costCentre: "IT-PAY-118",
@@ -397,6 +452,12 @@ export const engagements: Engagement[] = [
       "A change request adds €180,000 for regulatory reporting scope that was excluded from the original statement of work.",
     whyItMatters:
       "The change consumes the remaining programme contingency and the acceptance criteria for two milestones are ambiguous.",
+    stakeAmount: 180_000,
+    stakeLabel: "change request value awaiting a decision",
+    ifNothingHappens:
+      "The added scope stays unpriced and the regulatory reporting date slips past the supervisory expectation.",
+    draftRationale:
+      "The added regulatory reporting scope is needed, but the €180,000 price rests on a blended day rate with no role breakdown and two milestones have no measurable acceptance test. Approve in principle, conditional on a role-level price against schedule 2 and measurable acceptance criteria for milestones 3 and 4. Expected reduction of €22,000 and a two-week delay to the start of the added scope are accepted.",
     signalIds: ["rule-sow-change"],
     evidence: [
       {
@@ -497,6 +558,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-hel",
     type: "Managed service",
     criticality: "Important",
+    useCase: "Service failure",
     owner: "Tomas Ek",
     ownerRole: "Service Owner, Workplace",
     costCentre: "IT-WORK-090",
@@ -512,6 +574,12 @@ export const engagements: Engagement[] = [
     situation: "Service credits triggered in three of the last four months against the incident resolution target.",
     whyItMatters:
       "Repeated breaches give a termination-for-cause right that expires if not exercised within 60 days of the last breach.",
+    stakeAmount: 640_000,
+    stakeLabel: "annual service value covered by the remedy right",
+    ifNothingHappens:
+      "The termination-for-cause right under clause 15.4 lapses on 9 Nov 2026 and the service continues at the current performance level.",
+    draftRationale:
+      "P2 resolution missed the 95% target in three of the last four months and the credit cap was reached in July. Transition of 4,200 devices carries higher operational risk than remediation, so agree a formal 90-day improvement plan with weekly reporting and an uplifted credit regime. Following legal advice, the clause 15.4 termination right is expressly reserved in the remediation letter rather than waived.",
     signalIds: ["rule-service-credit"],
     evidence: [
       {
@@ -589,6 +657,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-cyb",
     type: "Consultancy team",
     criticality: "Important",
+    useCase: "Rate drift",
     owner: "Johan Lindqvist",
     ownerRole: "IT Manager, Platform",
     costCentre: "IT-DATA-141",
@@ -605,6 +674,12 @@ export const engagements: Engagement[] = [
     decisionState: "In review",
     situation: "Continuing need is confirmed but the squad shape has drifted from the agreed profile mix.",
     whyItMatters: "Two senior profiles were replaced by mid-level engineers while the rate stayed unchanged.",
+    stakeAmount: 48_000,
+    stakeLabel: "overpaid per year at the current profile mix",
+    ifNothingHappens:
+      "The squad continues at €138/h for a mid-weighted team and the €13,500 already overcharged is not recovered.",
+    draftRationale:
+      "Delivery throughput is unaffected, so the team stays as it is, but the blended rate must follow the actual seniority mix. Reprice to €129/h from the next invoice and claim a €13,500 credit for the period already billed. This is conditional on procurement verifying timesheet role titles against the CVs on file, since those titles are supplier-maintained.",
     signalIds: ["rule-notice-90", "rule-profile-drift"],
     evidence: [
       {
@@ -673,6 +748,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-aur",
     type: "Deliverable project",
     criticality: "Standard",
+    useCase: "Closeout",
     owner: "Karin Sund",
     ownerRole: "Delivery Manager",
     costCentre: "IT-SEC-073",
@@ -687,6 +763,12 @@ export const engagements: Engagement[] = [
     decisionState: "Decision recorded",
     situation: "Final milestone accepted with two conditions recorded at sign-off.",
     whyItMatters: "Conditions must be verified before the retention payment is released in December.",
+    stakeAmount: 41_000,
+    stakeLabel: "retention held until conditions are evidenced",
+    ifNothingHappens:
+      "The retention is released in December without the documentation and load-test evidence being checked.",
+    draftRationale:
+      "Final milestone functionality was demonstrated and accepted on 12 Sep 2026. Retention of €41,000 stays held until the documentation pack and load-test evidence are received and reviewed.",
     signalIds: [],
     evidence: [
       {
@@ -722,6 +804,173 @@ export const engagements: Engagement[] = [
       },
     ],
     openQuestions: [],
+  },
+  {
+    id: "eng-1130",
+    reference: "ENG-1130",
+    title: "Core banking test automation contractor",
+    supplier: "Nordlys Consulting",
+    supplierId: "sup-nor",
+    type: "Individual contractor",
+    criticality: "Important",
+    useCase: "Tenure risk",
+    owner: "Karin Sund",
+    ownerRole: "Delivery Manager",
+    costCentre: "IT-QA-052",
+    currency: "EUR",
+    rate: 96,
+    benchmarkRate: 92,
+    committedAnnual: 172_800,
+    spendToDate: 741_600,
+    startedOn: "2022-02-14",
+    contractExpiry: "2027-02-13",
+    noticeDeadline: "2026-11-15",
+    noticePeriodDays: 90,
+    autoRenews: true,
+    decisionState: "Needs review",
+    situation:
+      "The same individual has been engaged continuously for 4 years and 7 months on core banking test automation.",
+    whyItMatters:
+      "Tenure beyond 48 months breaches the supplier rotation policy, and the working pattern now resembles employment on three of five internal indicators.",
+    stakeAmount: 172_800,
+    stakeLabel: "annual cost of an engagement outside rotation policy",
+    ifNothingHappens:
+      "The engagement auto-renews to February 2028 at 5 years 7 months tenure, with the co-employment indicators unreviewed.",
+    draftRationale:
+      "The capability is needed permanently, so continuing to buy it as an open-ended contractor engagement is the wrong instrument. Open an internal requisition for a permanent test automation engineer and extend the current engagement by six months on a defined handover scope only. Legal has confirmed three of five co-employment indicators are present, so direct task management moves to the supplier's delivery lead for the remaining term.",
+    signalIds: ["rule-tenure"],
+    evidence: [
+      {
+        id: "ev-60",
+        lens: "Risk & legal",
+        label: "Continuous tenure",
+        value: "4 years 7 months",
+        detail:
+          "Engaged since 14 Feb 2022 with no break longer than 11 days. Supplier rotation policy sets a 48-month limit for individual contractors.",
+        source: "Engagement register and policy PR-07",
+        observedOn: "2026-09-22",
+        confidence: "Verified",
+      },
+      {
+        id: "ev-61",
+        lens: "Risk & legal",
+        label: "Co-employment indicators",
+        value: "3 of 5 present",
+        detail:
+          "Present: tasks assigned by an internal manager, fixed internal working hours, use of internal performance review. Absent: exclusivity and internal benefits.",
+        source: "Legal assessment, 26 Sep 2026",
+        observedOn: "2026-09-26",
+        confidence: "Verified",
+        limitation: "Assessment covers Swedish law only; the individual has worked from Denmark since June 2026.",
+      },
+      {
+        id: "ev-62",
+        lens: "Delivery",
+        label: "Single point of dependency",
+        value: "Sole maintainer",
+        detail:
+          "Maintains 1,340 automated regression tests. No second maintainer is named and no runbook has been produced.",
+        source: "QA capability review",
+        observedOn: "2026-09-17",
+        confidence: "Verified",
+      },
+      {
+        id: "ev-63",
+        lens: "Commercial",
+        label: "Rate vs market",
+        value: "€96/h vs €92/h median",
+        detail: "4.3% above median for test automation engineer, Nordics, mid band. Not material on its own.",
+        source: "Nordic Tech Rate Index, Q3 2026",
+        observedOn: "2026-08-14",
+        confidence: "Verified",
+        editable: true,
+      },
+      {
+        id: "ev-64",
+        lens: "Finance",
+        label: "Permanent role cost comparison",
+        value: "Estimate only",
+        detail:
+          "Internal fully loaded cost for an equivalent permanent engineer estimated at €118,000 per year against €172,800 contracted.",
+        source: "No source on file",
+        observedOn: "2026-09-28",
+        confidence: "Unverified",
+        limitation: "Estimate prepared from a salary band, not from an approved requisition.",
+        editable: true,
+      },
+    ],
+    options: [
+      {
+        id: "opt-l",
+        title: "Renew unchanged",
+        summary: "Allow the auto-renewal and keep the current arrangement.",
+        commercialEffect: "€172,800 per year continues.",
+        deliveryEffect: "No disruption to regression testing.",
+        riskEffect: "Breaches rotation policy and leaves co-employment indicators in place.",
+        effort: "Low",
+        annualDelta: 0,
+      },
+      {
+        id: "opt-m",
+        title: "Convert to a permanent internal role",
+        summary: "Open a requisition and taper the engagement over six months with a handover scope.",
+        commercialEffect: "€54,800 lower annual cost once the permanent hire is in place.",
+        deliveryEffect: "Depends on recruitment; six-month overlap protects the test suite.",
+        riskEffect: "Removes the tenure breach and the co-employment exposure.",
+        effort: "High",
+        annualDelta: -54_800,
+        recommended: true,
+      },
+      {
+        id: "opt-n",
+        title: "Rotate to a different supplier resource",
+        summary: "Replace the individual under the same supplier agreement with a documented handover.",
+        commercialEffect: "No change in cost; 4 weeks of dual running at €19,200.",
+        deliveryEffect: "High risk to 1,340 tests with no runbook in place.",
+        riskEffect: "Satisfies rotation policy but keeps the capability external.",
+        effort: "Medium",
+        annualDelta: 19_200,
+      },
+      {
+        id: "opt-o",
+        title: "Restructure as a milestone-based scope",
+        summary: "Move from hourly billing to defined test automation deliverables with the supplier managing the work.",
+        commercialEffect: "€148,000 fixed for equivalent scope.",
+        deliveryEffect: "Less flexibility for ad hoc test requests.",
+        riskEffect: "Reduces co-employment indicators by removing internal task direction.",
+        effort: "Medium",
+        annualDelta: -24_800,
+      },
+    ],
+    contributions: [
+      {
+        id: "con-50",
+        ask: "Confirm whether a permanent test automation requisition can be opened in FY27",
+        owner: "Anna Berg",
+        role: "Head of Platform Engineering",
+        status: "Requested",
+        dueOn: "2026-10-10",
+      },
+      {
+        id: "con-51",
+        ask: "Extend the co-employment assessment to cover work performed from Denmark",
+        owner: "Hanna Ek",
+        role: "Legal Counsel",
+        status: "Requested",
+        dueOn: "2026-10-08",
+      },
+      {
+        id: "con-52",
+        ask: "Confirm fully loaded internal cost for an equivalent permanent role",
+        owner: "Elin Dahl",
+        role: "Finance Business Partner",
+        status: "Not requested",
+      },
+    ],
+    openQuestions: [
+      "Is the test automation capability needed permanently or only until the core banking programme closes?",
+      "Who becomes the second maintainer of the regression suite?",
+    ],
   },
 ];
 
@@ -815,6 +1064,26 @@ export const signalRules: SignalRule[] = [
     assumptions: ["Role titles come from supplier timesheets and are not independently verified."],
     matchedEngagementIds: ["eng-1102"],
   },
+  {
+    id: "rule-tenure",
+    name: "Long-tenure individual engagement",
+    plainLanguage:
+      "Raise a review when one individual has been continuously engaged for more than 48 months.",
+    scope: "Individual contractors",
+    level: "Organisation control",
+    owner: "Legal and HR governance",
+    active: true,
+    leadTimeDays: 90,
+    minValue: 0,
+    criticality: ["Business critical", "Important", "Standard"],
+    requiresApproval: true,
+    assumptions: [
+      "Breaks shorter than 30 days do not reset the tenure count.",
+      "Tenure is measured from the first engagement start date, across contract renewals.",
+      "Co-employment indicators are assessed by legal, not by the rule itself.",
+    ],
+    matchedEngagementIds: ["eng-1130"],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -867,6 +1136,15 @@ export const valueItems: ValueItem[] = [
     basis: "Actual cost €410,000 against a €446,500 time-and-materials forecast. Verified in the FY26 close.",
     confirmedBy: "Elin Dahl, Finance Business Partner",
     confirmedOn: "2026-09-05",
+  },
+  {
+    id: "val-6",
+    label: "Test automation conversion to a permanent role",
+    engagementId: "eng-1130",
+    amountAnnual: 54_800,
+    stage: "Potential opportunity",
+    basis:
+      "Estimated from a salary band, not an approved requisition. Depends on recruitment being approved for FY27.",
   },
 ];
 
@@ -1035,13 +1313,13 @@ export const suppliers: Supplier[] = [
   {
     id: "sup-nor",
     name: "Nordlys Consulting",
-    engagements: 1,
-    annualSpend: 1_240_000,
+    engagements: 2,
+    annualSpend: 1_412_800,
     deliveryScore: 76,
     commercialScore: 64,
     assuranceStatus: "Current",
     lastReview: "2026-04-11",
-    note: "Change requests priced on blended rates without role breakdown.",
+    note: "Change requests priced on blended rates; one individual engagement is past the 48-month rotation limit.",
   },
   {
     id: "sup-hel",
