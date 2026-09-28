@@ -574,6 +574,12 @@ export const engagements: Engagement[] = [
     situation: "Service credits triggered in three of the last four months against the incident resolution target.",
     whyItMatters:
       "Repeated breaches give a termination-for-cause right that expires if not exercised within 60 days of the last breach.",
+    stakeAmount: 640_000,
+    stakeLabel: "annual service value covered by the remedy right",
+    ifNothingHappens:
+      "The termination-for-cause right under clause 15.4 lapses on 9 Nov 2026 and the service continues at the current performance level.",
+    draftRationale:
+      "P2 resolution missed the 95% target in three of the last four months and the credit cap was reached in July. Transition of 4,200 devices carries higher operational risk than remediation, so agree a formal 90-day improvement plan with weekly reporting and an uplifted credit regime. Following legal advice, the clause 15.4 termination right is expressly reserved in the remediation letter rather than waived.",
     signalIds: ["rule-service-credit"],
     evidence: [
       {
