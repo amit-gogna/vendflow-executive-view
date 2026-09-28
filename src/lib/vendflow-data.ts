@@ -1137,6 +1137,15 @@ export const valueItems: ValueItem[] = [
     confirmedBy: "Elin Dahl, Finance Business Partner",
     confirmedOn: "2026-09-05",
   },
+  {
+    id: "val-6",
+    label: "Test automation conversion to a permanent role",
+    engagementId: "eng-1130",
+    amountAnnual: 54_800,
+    stage: "Potential opportunity",
+    basis:
+      "Estimated from a salary band, not an approved requisition. Depends on recruitment being approved for FY27.",
+  },
 ];
 
 /* ------------------------------------------------------------------ */
