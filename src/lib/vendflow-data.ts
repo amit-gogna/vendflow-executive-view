@@ -674,6 +674,12 @@ export const engagements: Engagement[] = [
     decisionState: "In review",
     situation: "Continuing need is confirmed but the squad shape has drifted from the agreed profile mix.",
     whyItMatters: "Two senior profiles were replaced by mid-level engineers while the rate stayed unchanged.",
+    stakeAmount: 48_000,
+    stakeLabel: "overpaid per year at the current profile mix",
+    ifNothingHappens:
+      "The squad continues at €138/h for a mid-weighted team and the €13,500 already overcharged is not recovered.",
+    draftRationale:
+      "Delivery throughput is unaffected, so the team stays as it is, but the blended rate must follow the actual seniority mix. Reprice to €129/h from the next invoice and claim a €13,500 credit for the period already billed. This is conditional on procurement verifying timesheet role titles against the CVs on file, since those titles are supplier-maintained.",
     signalIds: ["rule-notice-90", "rule-profile-drift"],
     evidence: [
       {
