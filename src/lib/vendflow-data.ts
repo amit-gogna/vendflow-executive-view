@@ -210,6 +210,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-cyb",
     type: "Individual contractor",
     criticality: "Business critical",
+    useCase: "Renewal cliff",
     owner: "Johan Lindqvist",
     ownerRole: "IT Manager, Platform",
     costCentre: "IT-PLATFORM-204",
