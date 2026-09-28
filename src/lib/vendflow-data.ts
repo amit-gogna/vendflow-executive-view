@@ -558,6 +558,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-hel",
     type: "Managed service",
     criticality: "Important",
+    useCase: "Service failure",
     owner: "Tomas Ek",
     ownerRole: "Service Owner, Workplace",
     costCentre: "IT-WORK-090",
