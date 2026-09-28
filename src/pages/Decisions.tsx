@@ -251,7 +251,7 @@ export default function Decisions() {
                       key={e.id}
                       to={`/engagement/${e.id}`}
                       className={cn(
-                        "group grid grid-cols-[minmax(0,1fr)_215px_140px_120px_20px] items-center gap-5 rounded-lg border border-border border-l-2 bg-card px-5 py-3 shadow-card outline-none transition-colors hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-ring",
+                        "group grid grid-cols-[minmax(0,1fr)_200px_125px_112px_20px] items-center gap-4 rounded-lg border border-border border-l-2 bg-card px-4 py-3 shadow-card outline-none transition-colors hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-ring",
                         bandAccent[band],
                       )}
                     >
