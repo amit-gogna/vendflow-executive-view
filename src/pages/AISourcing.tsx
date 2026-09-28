@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 
 export default function AISourcing() {
   return (
-    <AppLayout>
-      <div className="mx-auto flex h-[calc(100vh-var(--header-height)-3rem)] max-w-7xl gap-6">
+    <AppLayout width="wide">
+      <div className="flex h-[calc(100vh-8rem)] gap-6">
         {/* Main chat area */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -15,11 +15,15 @@ export default function AISourcing() {
           className="flex min-w-0 flex-1 flex-col"
         >
           <div className="mb-4">
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground">
-              AI Sourcing
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Work
+            </p>
+            <h1 className="font-heading text-[22px] font-semibold tracking-tight text-foreground">
+              New demand
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
-              Describe what you need — the AI builds your RFQ in seconds.
+            <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+              Describe the need in your own words. A structured brief is drafted for you to correct, covering either
+              time-based work or a deliverable-based statement of work.
             </p>
           </div>
           <AISourcingChat />

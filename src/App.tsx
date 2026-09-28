@@ -3,12 +3,15 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Dashboard from "./pages/Dashboard";
-import RateIntelligence from "./pages/RateIntelligence";
+import { PrototypeStoreProvider } from "@/lib/prototype-store";
+import Decisions from "./pages/Decisions";
+import EngagementWorkspace from "./pages/EngagementWorkspace";
+import Suppliers from "./pages/Suppliers";
+import RatesAndTerms from "./pages/RatesAndTerms";
+import ValueLedger from "./pages/ValueLedger";
+import SignalRules from "./pages/SignalRules";
+import AuditLog from "./pages/AuditLog";
 import AISourcing from "./pages/AISourcing";
-import Proposals from "./pages/Proposals";
-import Vendors from "./pages/Vendors";
-import Governance from "./pages/Governance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,19 +19,23 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/rate-intelligence" element={<RateIntelligence />} />
-          <Route path="/ai-sourcing" element={<AISourcing />} />
-          <Route path="/proposals" element={<Proposals />} />
-          <Route path="/vendors" element={<Vendors />} />
-          <Route path="/governance" element={<Governance />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <PrototypeStoreProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Decisions />} />
+            <Route path="/engagement/:id" element={<EngagementWorkspace />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/rates" element={<RatesAndTerms />} />
+            <Route path="/value" element={<ValueLedger />} />
+            <Route path="/rules" element={<SignalRules />} />
+            <Route path="/audit" element={<AuditLog />} />
+            <Route path="/sourcing" element={<AISourcing />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </PrototypeStoreProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

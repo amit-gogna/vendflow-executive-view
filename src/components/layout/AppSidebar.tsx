@@ -1,97 +1,94 @@
-import { useLocation, Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
-  TrendingUp,
-  Brain,
-  FileText,
   Building2,
-  ShieldCheck,
-  ChevronLeft,
-  Zap,
+  ClipboardList,
+  FileSearch,
+  GaugeCircle,
+  ListChecks,
+  ScrollText,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePrototype } from "@/lib/prototype-store";
 
-const navSections = [
+const sections = [
   {
-    label: "Overview",
+    label: "Work",
     items: [
-      { title: "Dashboard", path: "/", icon: LayoutDashboard },
+      { title: "Decisions", path: "/", icon: ListChecks, hint: "What needs attention" },
+      { title: "Suppliers", path: "/suppliers", icon: Building2, hint: "Relationships and assurance" },
+      { title: "New demand", path: "/sourcing", icon: ClipboardList, hint: "Structure a new need" },
     ],
   },
   {
-    label: "Intelligence",
+    label: "Evidence",
     items: [
-      { title: "Rate Intelligence", path: "/rate-intelligence", icon: TrendingUp },
-      { title: "AI Sourcing", path: "/ai-sourcing", icon: Brain },
+      { title: "Rates & terms", path: "/rates", icon: FileSearch, hint: "Benchmarks with sources" },
+      { title: "Value", path: "/value", icon: GaugeCircle, hint: "Opportunity to verified impact" },
     ],
   },
   {
-    label: "Operations",
+    label: "Set up",
     items: [
-      { title: "Proposals", path: "/proposals", icon: FileText },
-      { title: "Vendors", path: "/vendors", icon: Building2 },
-    ],
-  },
-  {
-    label: "Compliance",
-    items: [
-      { title: "Governance & Audit", path: "/governance", icon: ShieldCheck },
+      { title: "Signal rules", path: "/rules", icon: SlidersHorizontal, hint: "What deserves attention" },
+      { title: "Record", path: "/audit", icon: ScrollText, hint: "Decisions and changes" },
     ],
   },
 ];
 
-interface AppSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-}
-
-export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
+export function AppSidebar() {
   const location = useLocation();
+  const { engagements, currentUser } = usePrototype();
+  const needsAttention = engagements.filter(
+    (e) => e.decisionState === "Needs review" || e.decisionState === "Awaiting contribution",
+  ).length;
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
-        collapsed ? "w-16" : "w-[260px]"
-      )}
-    >
-      {/* Logo */}
-      <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-          <Zap className="h-4 w-4 text-sidebar-primary-foreground" />
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[248px] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-5">
+        <div className="flex h-7 w-7 items-center justify-center rounded bg-sidebar-primary font-heading text-[13px] font-bold text-sidebar-primary-foreground">
+          V
         </div>
-        {!collapsed && (
-          <span className="font-heading text-[15px] font-semibold tracking-tight text-sidebar-accent-foreground">
+        <div className="leading-none">
+          <span className="font-heading text-[14px] font-semibold tracking-tight text-sidebar-accent-foreground">
             Vendflow
           </span>
-        )}
+          <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-muted">Acme Group</p>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {navSections.map((section) => (
-          <div key={section.label} className="mb-5">
-            {!collapsed && (
-              <p className="mb-1.5 px-2 text-[11px] font-medium uppercase tracking-widest text-sidebar-muted">
-                {section.label}
-              </p>
-            )}
+      <nav className="flex-1 overflow-y-auto px-3 py-5">
+        {sections.map((section) => (
+          <div key={section.label} className="mb-6">
+            <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted">
+              {section.label}
+            </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const active = location.pathname === item.path;
+                const active =
+                  item.path === "/"
+                    ? location.pathname === "/" || location.pathname.startsWith("/engagement")
+                    : location.pathname.startsWith(item.path);
                 return (
                   <li key={item.path}>
                     <Link
                       to={item.path}
                       className={cn(
-                        "group flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors",
+                        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                         active
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
                       )}
                     >
-                      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-sidebar-primary")} />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon
+                        className={cn("h-[16px] w-[16px] shrink-0", active && "text-sidebar-primary")}
+                      />
+                      <span className="flex-1">{item.title}</span>
+                      {item.path === "/" && needsAttention > 0 && (
+                        <span className="rounded bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                          {needsAttention}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -101,13 +98,10 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         ))}
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={onToggle}
-        className="flex h-10 items-center justify-center border-t border-sidebar-border text-sidebar-muted transition-colors hover:text-sidebar-accent-foreground"
-      >
-        <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-      </button>
+      <div className="border-t border-sidebar-border px-4 py-3">
+        <p className="text-[12px] font-medium text-sidebar-accent-foreground">{currentUser.name}</p>
+        <p className="text-[11px] text-sidebar-muted">{currentUser.role}</p>
+      </div>
     </aside>
   );
 }
