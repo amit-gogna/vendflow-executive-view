@@ -229,6 +229,12 @@ export const engagements: Engagement[] = [
       "Notice deadline falls in 94 days and the contract renews automatically for a further 12 months if no notice is given.",
     whyItMatters:
       "The engagement holds sole knowledge of the landing-zone design used by four migration workstreams, and its rate sits 16% above the current Nordic benchmark.",
+    stakeAmount: 41_400,
+    stakeLabel: "paid above market per year if it renews unchanged",
+    ifNothingHappens:
+      "The contract renews to 31 Mar 2028 at €165/h, with knowledge transfer and the expired security review still unaddressed.",
+    draftRationale:
+      "Continuing need for external platform architecture is confirmed to March 2028, but the contracted rate is 16% above the verified Nordic median. Counter at €148/h with a two-year term, documented handover of the landing-zone design as a deliverable, and a refreshed security review as a condition of signature. The June–July invoice variance of €4,455 is settled before the amendment is signed.",
     signalIds: ["rule-notice-90", "rule-rate-gap"],
     evidence: [
       {
