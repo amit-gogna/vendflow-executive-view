@@ -763,6 +763,12 @@ export const engagements: Engagement[] = [
     decisionState: "Decision recorded",
     situation: "Final milestone accepted with two conditions recorded at sign-off.",
     whyItMatters: "Conditions must be verified before the retention payment is released in December.",
+    stakeAmount: 41_000,
+    stakeLabel: "retention held until conditions are evidenced",
+    ifNothingHappens:
+      "The retention is released in December without the documentation and load-test evidence being checked.",
+    draftRationale:
+      "Final milestone functionality was demonstrated and accepted on 12 Sep 2026. Retention of €41,000 stays held until the documentation pack and load-test evidence are received and reviewed.",
     signalIds: [],
     evidence: [
       {
