@@ -109,6 +109,7 @@ export interface Engagement {
   supplierId: string;
   type: EngagementType;
   criticality: Criticality;
+  useCase: UseCase;
   owner: string;
   ownerRole: string;
   costCentre: string;
@@ -125,6 +126,13 @@ export interface Engagement {
   decisionState: DecisionState;
   situation: string;
   whyItMatters: string;
+  /** What is financially at stake in this specific decision. */
+  stakeAmount: number;
+  stakeLabel: string;
+  /** The single sentence that says what happens if nobody acts. */
+  ifNothingHappens: string;
+  /** Pre-drafted rationale the decision owner edits before recording. */
+  draftRationale: string;
   signalIds: string[];
   evidence: EvidenceItem[];
   options: OptionItem[];
