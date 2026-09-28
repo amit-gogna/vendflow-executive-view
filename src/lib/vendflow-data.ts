@@ -16,6 +16,45 @@ export type EngagementType =
 
 export type Criticality = "Business critical" | "Important" | "Standard";
 
+/**
+ * The five recurring, high-impact decisions this prototype is designed around,
+ * plus a closeout case for engagements already decided.
+ */
+export type UseCase =
+  | "Renewal cliff"
+  | "Scope change"
+  | "Rate drift"
+  | "Service failure"
+  | "Tenure risk"
+  | "Closeout";
+
+export const useCaseLabels: Record<UseCase, { short: string; explain: string }> = {
+  "Renewal cliff": {
+    short: "Renewal cliff",
+    explain: "A notice deadline is approaching and the contract renews itself if nothing is done.",
+  },
+  "Scope change": {
+    short: "Scope change",
+    explain: "A change request adds cost or time to agreed work.",
+  },
+  "Rate drift": {
+    short: "Rate drift",
+    explain: "What is billed no longer matches the agreed rate or seniority mix.",
+  },
+  "Service failure": {
+    short: "Service failure",
+    explain: "Service targets were missed often enough to open a remedy or exit right.",
+  },
+  "Tenure risk": {
+    short: "Tenure risk",
+    explain: "A long-running individual engagement carries employment and dependency risk.",
+  },
+  Closeout: {
+    short: "Closeout",
+    explain: "Decided already, with conditions still to verify.",
+  },
+};
+
 export type DecisionState =
   | "Needs review"
   | "In review"
