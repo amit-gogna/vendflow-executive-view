@@ -11,7 +11,7 @@ import {
   type Engagement,
   type UseCase,
 } from "@/lib/vendflow-data";
-import { AlertTriangle, ArrowRight, Check, Clock3, Filter } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* Urgency bands ---------------------------------------------------- */
@@ -32,30 +32,96 @@ const bandCopy: Record<Band, string> = {
   Decided: "Recorded. Conditions still need verifying.",
 };
 
-const bandTone: Record<Band, string> = {
-  "Decide now": "border-destructive/35 bg-destructive/[0.04]",
-  "Prepare next": "border-warning/35 bg-warning/[0.04]",
-  Watching: "border-border bg-card",
-  Decided: "border-success/30 bg-success/[0.03]",
+const bandAccent: Record<Band, string> = {
+  "Decide now": "border-l-destructive",
+  "Prepare next": "border-l-warning",
+  Watching: "border-l-border",
+  Decided: "border-l-success",
 };
 
 /* Readiness -------------------------------------------------------- */
 
 function readinessOf(e: Engagement) {
-  const blockers: string[] = [];
-  const unreliable = e.evidence.filter((ev) => ev.confidence !== "Verified");
-  const waiting = e.contributions.filter((c) => c.status === "Requested" || c.status === "Overdue");
   const overdue = e.contributions.filter((c) => c.status === "Overdue");
-
-  if (overdue.length) blockers.push(`${overdue.length} overdue input`);
-  else if (waiting.length) blockers.push(`${waiting.length} input awaited`);
-  if (unreliable.length) blockers.push(`${unreliable.length} fact${unreliable.length > 1 ? "s" : ""} unreliable`);
+  const waiting = e.contributions.filter((c) => c.status === "Requested");
+  const unreliable = e.evidence.filter((ev) => ev.confidence !== "Verified");
 
   return {
-    blockers,
-    ready: blockers.length === 0,
-    hasOverdue: overdue.length > 0,
+    overdue: overdue.length,
+    waiting: waiting.length,
+    unreliable: unreliable.length,
+    ready: overdue.length === 0 && waiting.length === 0 && unreliable.length === 0,
   };
+}
+
+/* Readiness cell: two signal dots + one short label ---------------- */
+
+function ReadinessCell({ e }: { e: Engagement }) {
+  const r = readinessOf(e);
+  const decided = e.decisionState === "Decision recorded";
+
+  const inputDot = r.overdue ? "bg-destructive" : r.waiting ? "bg-warning" : "bg-success";
+  const factDot = r.unreliable ? "bg-warning" : "bg-success";
+
+  let label = "Ready to decide";
+  let labelCls = "text-success";
+  if (decided) {
+    label = "Decision recorded";
+  } else if (r.ready) {
+    // keep defaults
+  } else if (r.overdue) {
+    label = `${r.overdue} overdue input${r.overdue > 1 ? "s" : ""}`;
+    labelCls = "text-destructive";
+  } else if (r.waiting) {
+    label = `${r.waiting} input${r.waiting > 1 ? "s" : ""} awaited`;
+    labelCls = "text-warning";
+  } else if (r.unreliable) {
+    label = `${r.unreliable} fact${r.unreliable > 1 ? "s" : ""} unreliable`;
+    labelCls = "text-warning";
+  }
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flex items-center gap-1" title="Contributions">
+        <span className={cn("h-1.5 w-6 rounded-full", decided ? "bg-success/40" : inputDot)} />
+        <span className={cn("h-1.5 w-6 rounded-full", decided ? "bg-success/40" : factDot)} />
+      </span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 text-[12px] font-medium",
+          decided ? "text-success" : labelCls,
+        )}
+      >
+        {decided && <Check className="h-3 w-3" />}
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* Deadline pill ---------------------------------------------------- */
+
+function DeadlineCell({ e, days }: { e: Engagement; days: number }) {
+  const decided = e.decisionState === "Decision recorded";
+  const tone = decided
+    ? "bg-secondary text-muted-foreground"
+    : days <= 60
+      ? "bg-destructive/10 text-destructive"
+      : days <= 120
+        ? "bg-warning/15 text-warning"
+        : "bg-secondary text-foreground";
+
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <span className={cn("rounded px-2 py-0.5 text-[11px] font-semibold tabular-nums", tone)}>
+        {decided ? "Closed" : days > 0 ? `${days} days` : "Passed"}
+      </span>
+      <span className="text-[10px] text-muted-foreground">
+        {shortDate(e.noticeDeadline)}
+        {e.autoRenews && !decided && " · auto-renews"}
+      </span>
+    </div>
+  );
 }
 
 const bands: Band[] = ["Decide now", "Prepare next", "Watching", "Decided"];
@@ -97,11 +163,11 @@ export default function Decisions() {
 
   return (
     <AppLayout width="wide">
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
           eyebrow="Your work"
           title="Decisions"
-          purpose="Each item is one decision with a date it closes and a figure at stake. Open it to read the briefing, compare the options and record a choice."
+          purpose="Every decision with a closing date and a figure at stake."
           actions={
             <button
               onClick={() => setOnlyMine((v) => !v)}
@@ -120,29 +186,27 @@ export default function Decisions() {
 
         {/* Headline ------------------------------------------------- */}
         {decideNow.length > 0 && (
-          <Panel className="flex items-center gap-6 border-destructive/30 bg-destructive/[0.04] px-5 py-4">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
-            <div className="flex-1">
-              <p className="font-heading text-[14px] font-semibold text-foreground">
-                {decideNow.length} decision{decideNow.length > 1 ? "s" : ""} close within 60 days
-              </p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
-                {eur(atStake)} is at stake across them. The earliest closes{" "}
-                {shortDate(decideNow[0].e.noticeDeadline)}.
-              </p>
-            </div>
+          <Panel className="flex items-center gap-4 border-destructive/30 bg-destructive/[0.04] px-5 py-3.5">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+            <p className="flex-1 text-[13px] text-foreground">
+              <span className="font-semibold">{decideNow.length} close within 60 days</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · {eur(atStake)} at stake · earliest {shortDate(decideNow[0].e.noticeDeadline)}
+              </span>
+            </p>
             <Link
               to={`/engagement/${decideNow[0].e.id}`}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-primary px-4 text-[13px] font-medium text-primary-foreground hover:opacity-90"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-[12px] font-medium text-primary-foreground hover:opacity-90"
             >
-              Open the closest one <ArrowRight className="h-3.5 w-3.5" />
+              Closest one <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Panel>
         )}
 
         {/* Use-case filter ------------------------------------------ */}
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-4">
-          <span className="mr-1 text-[12px] text-muted-foreground">Type of decision</span>
+          <span className="mr-1 text-[12px] text-muted-foreground">Type</span>
           {caseFilters.map((c) => {
             const count = c === "All" ? undefined : (caseCounts[c] ?? 0);
             if (c !== "All" && !count) return null;
@@ -165,12 +229,6 @@ export default function Decisions() {
           })}
         </div>
 
-        {useCase !== "All" && (
-          <p className="-mt-2 text-[12px] leading-relaxed text-muted-foreground">
-            {useCaseLabels[useCase].explain}
-          </p>
-        )}
-
         {/* Bands ---------------------------------------------------- */}
         {bands.map((band) => {
           const items = filtered.filter(({ e, days }) => bandFor(days, e.decisionState) === band);
@@ -178,114 +236,58 @@ export default function Decisions() {
 
           return (
             <section key={band}>
-              <div className="mb-2.5 flex items-baseline gap-3">
-                <h2 className="font-heading text-[14px] font-semibold tracking-tight text-foreground">
+              <div className="mb-2 flex items-baseline gap-2.5" title={bandCopy[band]}>
+                <h2 className="font-heading text-[13px] font-semibold uppercase tracking-[0.06em] text-foreground">
                   {band}
                 </h2>
-                <Tag tone="outline">{items.length}</Tag>
-                <p className="text-[12px] text-muted-foreground">{bandCopy[band]}</p>
+                <span className="text-[12px] tabular-nums text-muted-foreground">{items.length}</span>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-1.5">
                 {items.map(({ e, days }) => {
-                  const readiness = readinessOf(e);
                   const decided = e.decisionState === "Decision recorded";
                   return (
                     <Link
                       key={e.id}
                       to={`/engagement/${e.id}`}
                       className={cn(
-                        "group flex items-stretch gap-6 rounded-lg border px-5 py-4 shadow-card outline-none transition-colors hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-ring",
-                        bandTone[band],
+                        "group grid grid-cols-[minmax(0,1fr)_215px_140px_120px_20px] items-center gap-5 rounded-lg border border-border border-l-2 bg-card px-5 py-3 shadow-card outline-none transition-colors hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-ring",
+                        bandAccent[band],
                       )}
                     >
-                      {/* Left: what and why */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                      {/* What */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
                           <Tag tone={decided ? "success" : band === "Decide now" ? "danger" : "primary"}>
                             {e.useCase}
                           </Tag>
-                          <span className="font-heading text-[14px] font-semibold text-foreground">
+                          <span className="truncate font-heading text-[14px] font-semibold text-foreground">
                             {e.title}
                           </span>
                           <CriticalityTag value={e.criticality} />
                         </div>
-
-                        <p className="mt-1 text-[12px] text-muted-foreground">
-                          {e.supplier} · {e.reference} · owner {e.owner}
+                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                          {e.supplier} · {e.reference} · {e.owner}
                         </p>
-
-                        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-foreground/85">
-                          {decided ? e.situation : e.ifNothingHappens}
-                        </p>
-
-                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                          {decided ? (
-                            <span className="inline-flex items-center gap-1 text-[12px] font-medium text-success">
-                              <Check className="h-3 w-3" /> Decision recorded
-                            </span>
-                          ) : readiness.ready ? (
-                            <span className="inline-flex items-center gap-1 text-[12px] font-medium text-success">
-                              <Check className="h-3 w-3" /> Ready to decide
-                            </span>
-                          ) : (
-                            <>
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1 text-[12px] font-medium",
-                                  readiness.hasOverdue ? "text-destructive" : "text-warning",
-                                )}
-                              >
-                                <Clock3 className="h-3 w-3" /> Waiting on
-                              </span>
-                              {readiness.blockers.map((b) => (
-                                <Tag key={b} tone={readiness.hasOverdue ? "danger" : "warning"}>
-                                  {b}
-                                </Tag>
-                              ))}
-                            </>
-                          )}
-                        </div>
                       </div>
 
-                      {/* Middle: stake */}
-                      <div className="w-[150px] shrink-0 border-l border-border pl-5">
-                        <p className="font-heading text-[17px] font-semibold tracking-tight text-foreground">
+                      {/* Readiness */}
+                      <ReadinessCell e={e} />
+
+                      {/* Stake */}
+                      <div className="text-right">
+                        <p className="font-heading text-[15px] font-semibold tabular-nums tracking-tight text-foreground">
                           {eur(e.stakeAmount)}
                         </p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                        <p className="truncate text-[10px] text-muted-foreground" title={e.stakeLabel}>
                           {e.stakeLabel}
                         </p>
                       </div>
 
-                      {/* Right: clock */}
-                      <div className="w-[130px] shrink-0 border-l border-border pl-5">
-                        <p
-                          className={cn(
-                            "font-heading text-[17px] font-semibold tracking-tight",
-                            decided
-                              ? "text-foreground"
-                              : days <= 60
-                                ? "text-destructive"
-                                : days <= 120
-                                  ? "text-warning"
-                                  : "text-foreground",
-                          )}
-                        >
-                          {days > 0 ? `${days} days` : "passed"}
-                        </p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                          until {shortDate(e.noticeDeadline)}
-                          {e.autoRenews && !decided && (
-                            <>
-                              <br />
-                              then renews automatically
-                            </>
-                          )}
-                        </p>
-                      </div>
+                      {/* Deadline */}
+                      <DeadlineCell e={e} days={days} />
 
-                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                     </Link>
                   );
                 })}
