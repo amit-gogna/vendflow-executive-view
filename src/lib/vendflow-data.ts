@@ -657,6 +657,7 @@ export const engagements: Engagement[] = [
     supplierId: "sup-cyb",
     type: "Consultancy team",
     criticality: "Important",
+    useCase: "Rate drift",
     owner: "Johan Lindqvist",
     ownerRole: "IT Manager, Platform",
     costCentre: "IT-DATA-141",
