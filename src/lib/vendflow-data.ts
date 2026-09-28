@@ -1064,6 +1064,26 @@ export const signalRules: SignalRule[] = [
     assumptions: ["Role titles come from supplier timesheets and are not independently verified."],
     matchedEngagementIds: ["eng-1102"],
   },
+  {
+    id: "rule-tenure",
+    name: "Long-tenure individual engagement",
+    plainLanguage:
+      "Raise a review when one individual has been continuously engaged for more than 48 months.",
+    scope: "Individual contractors",
+    level: "Organisation control",
+    owner: "Legal and HR governance",
+    active: true,
+    leadTimeDays: 90,
+    minValue: 0,
+    criticality: ["Business critical", "Important", "Standard"],
+    requiresApproval: true,
+    assumptions: [
+      "Breaks shorter than 30 days do not reset the tenure count.",
+      "Tenure is measured from the first engagement start date, across contract renewals.",
+      "Co-employment indicators are assessed by legal, not by the rule itself.",
+    ],
+    matchedEngagementIds: ["eng-1130"],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
