@@ -452,6 +452,12 @@ export const engagements: Engagement[] = [
       "A change request adds €180,000 for regulatory reporting scope that was excluded from the original statement of work.",
     whyItMatters:
       "The change consumes the remaining programme contingency and the acceptance criteria for two milestones are ambiguous.",
+    stakeAmount: 180_000,
+    stakeLabel: "change request value awaiting a decision",
+    ifNothingHappens:
+      "The added scope stays unpriced and the regulatory reporting date slips past the supervisory expectation.",
+    draftRationale:
+      "The added regulatory reporting scope is needed, but the €180,000 price rests on a blended day rate with no role breakdown and two milestones have no measurable acceptance test. Approve in principle, conditional on a role-level price against schedule 2 and measurable acceptance criteria for milestones 3 and 4. Expected reduction of €22,000 and a two-week delay to the start of the added scope are accepted.",
     signalIds: ["rule-sow-change"],
     evidence: [
       {
