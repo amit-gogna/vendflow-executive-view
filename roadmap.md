@@ -1,6 +1,7 @@
 # Vendflow prototype roadmap
 
 ## In progress
+- [x] Simplify each decision detail into a compact brief, comparison, supporting detail, and sign-off
 - [x] Coherent demo dataset (`src/lib/vendflow-data.ts`)
 - [ ] Shared prototype state store (evidence corrections, decisions, contributions, rules, audit)
 - [ ] Decisions home (what needs attention, grouped by urgency and state)
