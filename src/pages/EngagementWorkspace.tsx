@@ -239,7 +239,7 @@ export default function EngagementWorkspace() {
             <Panel className="mt-2.5 overflow-hidden">
               <div className="flex items-center gap-1 border-b border-border bg-surface-sunken px-3 py-2">
                 {(["Evidence", "Specialist input", "Assessments"] as DetailTab[]).map((t) => (
-                  <button
+                  <Button variant="ghost"
                     key={t}
                     onClick={() => setDetailTab(t)}
                     className={cn(
@@ -250,7 +250,7 @@ export default function EngagementWorkspace() {
                     )}
                   >
                     {t}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -263,7 +263,7 @@ export default function EngagementWorkspace() {
                     </p>
                     <div className="flex shrink-0 items-center gap-1">
                       {(["All", ...lenses] as const).map((l) => (
-                        <button
+                        <Button variant="ghost"
                           key={l}
                           onClick={() => setActiveLens(l)}
                           className={cn(
@@ -274,7 +274,7 @@ export default function EngagementWorkspace() {
                           )}
                         >
                           {l}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -298,7 +298,7 @@ export default function EngagementWorkspace() {
                           {ev.value}
                         </p>
 
-                        <button
+                        <Button variant="ghost"
                           onClick={() => setExpanded(expanded === ev.id ? null : ev.id)}
                           className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:underline"
                         >
@@ -306,7 +306,7 @@ export default function EngagementWorkspace() {
                           <ChevronDown
                             className={cn("h-3 w-3 transition-transform", expanded === ev.id && "rotate-180")}
                           />
-                        </button>
+                        </Button>
 
                         {expanded === ev.id && (
                           <div className="mt-2">
@@ -314,7 +314,7 @@ export default function EngagementWorkspace() {
                             <SourceLine source={ev.source} observedOn={ev.observedOn} limitation={ev.limitation} />
 
                             {ev.editable && editing !== ev.id && (
-                              <button
+                              <Button variant="ghost"
                                 onClick={() => {
                                   setEditing(ev.id);
                                   setDraftValue(ev.value);
@@ -323,7 +323,7 @@ export default function EngagementWorkspace() {
                                 className="mt-2 inline-flex items-center gap-1.5 rounded border border-border bg-card px-2 py-1 text-[12px] font-medium text-foreground hover:bg-secondary"
                               >
                                 <Pencil className="h-3 w-3" /> Correct this fact
-                              </button>
+                              </Button>
                             )}
 
                             {editing === ev.id && (
@@ -347,18 +347,18 @@ export default function EngagementWorkspace() {
                                   className="w-full rounded border border-input bg-card px-2 py-1.5 text-[12px] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                                 <div className="flex items-center gap-2 pt-0.5">
-                                  <button
+                                  <Button variant="ghost"
                                     onClick={() => saveCorrection(ev.id)}
                                     className="inline-flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-[12px] font-medium text-primary-foreground hover:opacity-90"
                                   >
                                     <Check className="h-3 w-3" /> Save correction
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button variant="ghost"
                                     onClick={() => setEditing(null)}
                                     className="h-8 rounded border border-border px-3 text-[12px] font-medium text-muted-foreground hover:bg-secondary"
                                   >
                                     Cancel
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                             )}
@@ -408,12 +408,12 @@ export default function EngagementWorkspace() {
                         {c.status === "Requested" && <Tag tone="primary">Requested</Tag>}
                         {c.status === "Overdue" && <Tag tone="danger">Overdue</Tag>}
                         {c.status === "Not requested" && (
-                          <button
+                          <Button variant="ghost"
                             onClick={() => requestContribution(engagement.id, c.id)}
                             className="inline-flex h-7 items-center gap-1.5 rounded border border-border bg-card px-2 text-[12px] font-medium text-foreground hover:bg-secondary"
                           >
                             <Send className="h-3 w-3" /> Request
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export default function EngagementWorkspace() {
                       return (
                         <li key={tool} className="flex items-center justify-between gap-3">
                           <span className="text-[12px] text-foreground/85">{tool}</span>
-                          <button
+                          <Button variant="ghost"
                             onClick={() =>
                               setAddedTools((prev) =>
                                 added ? prev.filter((t) => t !== tool) : [...prev, tool],
@@ -454,7 +454,7 @@ export default function EngagementWorkspace() {
                           >
                             {added ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
                             {added ? "Added" : "Add"}
-                          </button>
+                          </Button>
                         </li>
                       );
                     })}
@@ -462,7 +462,8 @@ export default function EngagementWorkspace() {
                 </div>
               )}
             </Panel>
-          )}        </section>
+          )}
+        </section>
 
         <section aria-labelledby="record-heading" className="pt-6">
           <div className="mb-3 flex items-center justify-between">
@@ -481,7 +482,7 @@ export default function EngagementWorkspace() {
           ) : (
             <div className="space-y-3 rounded-md border border-border bg-card p-4">
               <p className="text-[13px] font-medium text-foreground">{option.title}</p>
-              {gaps.length > 0 && <button type="button" onClick={() => openDetail("Evidence")} className="inline-flex items-center gap-1.5 text-[12px] text-warning hover:underline"><AlertTriangle className="h-3.5 w-3.5" />{gaps.length} facts need checking — review before recording</button>}
+              {gaps.length > 0 && <Button variant="ghost" type="button" onClick={() => openDetail("Evidence")} className="inline-flex items-center gap-1.5 text-[12px] text-warning hover:underline"><AlertTriangle className="h-3.5 w-3.5" />{gaps.length} facts need checking — review before recording</Button>}
               <div>
                 <label htmlFor="decision-rationale" className="mb-1 block text-[12px] font-medium text-foreground">Reason for decision</label>
                 <textarea id="decision-rationale" value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder="Why this option?" className="w-full rounded border border-input bg-card px-3 py-2 text-[13px] leading-relaxed focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
