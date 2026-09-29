@@ -257,11 +257,8 @@ export default function EngagementWorkspace() {
               {/* Evidence tab */}
               {detailTab === "Evidence" && (
                 <div className="px-4 py-4">
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <p className="text-[12px] text-muted-foreground">
-                      Every fact shows its source, date and limits. Corrections update the options and the record.
-                    </p>
-                    <div className="flex shrink-0 items-center gap-1">
+                  <div className="mb-3 flex items-center justify-end">
+                    <div className="flex items-center gap-1">
                       {(["All", ...lenses] as const).map((l) => (
                         <Button variant="ghost"
                           key={l}
